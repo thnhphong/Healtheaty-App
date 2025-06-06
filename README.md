@@ -95,6 +95,15 @@ cd frontend
 npm install
 ```
 b. Start Expo app: 
+- Because we put the code into folder /app(index.tsx) so we have to change the entry point in package.json("main": "index.js" => "main": "expo-router/entry") and install 
+```bash
+npm install expo-router
+```
+& also install the necessary peer dependencies (if not already):
+```bash
+npx expo install react-native-screens react-native-safe-area-context
+```
+After all
 ```bash
 npx expo start
 ```
