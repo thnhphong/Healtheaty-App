@@ -9,10 +9,22 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProps } from '../types/navigation';
+import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/ProfileScreenStyles';
 
-type ProfileScreenProps = NavigationProps<'Profile'>;
+type RootStackParamList = {
+  Welcome: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  UserInfo: undefined;
+  Home: undefined;
+  Profile: undefined;
+};
+
+// Fixed: Correct prop type definition
+type ProfileScreenProps = {
+  navigation: NavigationProp<RootStackParamList, 'Profile'>;
+};
 
 interface UserData {
   fullName?: string;
@@ -26,6 +38,8 @@ interface UserInfo {
   weight: number;
   activityFactor: number;
 }
+
+// Removed duplicate HomeScreenProps interface - not needed here
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [userData, setUserData] = useState<UserData | null>(null);

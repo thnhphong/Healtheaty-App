@@ -13,8 +13,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { signUpStyles } from '../styles/SignUpScreenStyles';
 import { NavigationProp } from '@react-navigation/native';
-import { RootStackParamList } from '../types/navigation';
-
+type RootStackParamList = {
+  Welcome: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  UserInfo: undefined;
+  Home: undefined;
+  Profile: undefined;
+};
 interface SignUpScreenProps {
   navigation: NavigationProp<RootStackParamList, 'SignUp'>;
 }

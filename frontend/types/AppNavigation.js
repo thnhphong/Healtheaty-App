@@ -1,26 +1,26 @@
-// App.tsx (root level)
+// navigation/AppNavigator.js
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { RootStackParamList } from './frontend/types/navigation';
 
-import WelcomeScreen from './frontend/screens/WelcomeScreen';
-import SignInScreen from './frontend/screens/SignInScreen';
-import SignUpScreen from './frontend/screens/SignUpScreen';
-import UserInfoScreen from './frontend/screens/UserInfoScreen';
-import HomeScreen from './frontend/screens/HomeScreen';
-import ProfileScreen from './frontend/screens/ProfileScreen';
+// Import screens - update these paths based on your actual screen locations
+import WelcomeScreen from '../screens/WelcomeScreen';
+import SignInScreen from '../screens/SignInScreen';
+import SignUpScreen from '../screens/SignUpScreen';
+import UserInfoScreen from '../screens/UserInfoScreen';
+import HomeScreen from '../screens/HomeScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
+const Stack = createStackNavigator();
 
-const Stack = createStackNavigator<RootStackParamList>();
-
-export default function App() {
+const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator 
-        id={undefined}
-        initialRouteName="Home"
-        screenOptions={{ headerShown: false }}
+        initialRouteName="Welcome"
+        screenOptions={{
+          headerShown: false,
+        }}
       >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="SignIn" component={SignInScreen} />
@@ -31,4 +31,6 @@ export default function App() {
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+};
+
+export default AppNavigator;

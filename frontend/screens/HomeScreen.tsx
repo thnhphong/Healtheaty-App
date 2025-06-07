@@ -9,10 +9,22 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProps } from '../types/navigation';
+import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/HomeScreenStyles';
 
-type HomeScreenProps = NavigationProps<'Home'>;
+type RootStackParamList = {
+  Welcome: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  UserInfo: undefined;
+  Home: undefined;
+  Profile: undefined;
+};
+
+// Fixed: Correct prop type definition
+type HomeScreenProps = {
+  navigation: NavigationProp<RootStackParamList, 'Home'>;
+};
 
 interface UserData {
   fullName?: string;
@@ -164,19 +176,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View style={styles.calendarGrid}>
             {getDaysInMonth().map((day, index) => (
               <TouchableOpacity
-  key={index}
-  style={[
-    styles.calendarDay,
-    (day !== null && day !== undefined && isToday(day)) ? styles.calendarDayToday : null
-  ]}
->
-  <Text style={[
-    styles.calendarDayText,
-    (day !== null && day !== undefined && isToday(day)) ? styles.calendarDayTodayText : null
-  ]}>
-    {day || ''}
-  </Text>
-</TouchableOpacity>
+                key={index}
+                style={[
+                  styles.calendarDay,
+                  (day !== null && day !== undefined && isToday(day)) ? styles.calendarDayToday : null
+                ]}
+              >
+                <Text style={[
+                  styles.calendarDayText,
+                  (day !== null && day !== undefined && isToday(day)) ? styles.calendarDayTodayText : null
+                ]}>
+                  {day || ''}
+                </Text>
+              </TouchableOpacity>
             ))}
           </View>
         </View>

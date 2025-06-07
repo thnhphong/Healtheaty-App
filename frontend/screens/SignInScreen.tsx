@@ -10,10 +10,22 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProps } from '../types/navigation';
+import { NavigationProp } from '@react-navigation/native';
 import { signInStyles } from '../styles/SignInScreenStyles';
 
-interface SignInScreenProps extends NavigationProps {}
+// Define your root stack param list
+type RootStackParamList = {
+  Welcome: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  UserInfo: undefined;
+  Home: undefined;
+  Profile: undefined;
+};
+
+interface SignInScreenProps {
+  navigation: NavigationProp<RootStackParamList>;
+}
 
 interface SignInFormData {
   email: string;

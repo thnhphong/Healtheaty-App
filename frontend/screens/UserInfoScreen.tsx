@@ -10,7 +10,22 @@ import {
   Alert
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { NavigationProp } from '@react-navigation/native';
 import { userInfoStyles } from '../styles/UserInfoScreenStyles';
+
+// Define your root stack param list
+type RootStackParamList = {
+  Welcome: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  UserInfo: undefined;
+  Home: undefined;
+  Profile: undefined;
+};
+
+interface UserInfoScreenProps {
+  navigation: NavigationProp<RootStackParamList>;
+}
 
 interface UserInfo {
   age: string;
@@ -25,7 +40,7 @@ interface ActivityLevel {
   label: string;
 }
 
-const UserInfoScreen: React.FC = () => {
+const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState<UserInfo>({
     age: '',
     gender: 'male',
@@ -138,7 +153,7 @@ const UserInfoScreen: React.FC = () => {
         [
           {
             text: 'OK',
-            onPress: () => console.log('Navigate to Home')
+            onPress: () => navigation.navigate('Home')
           }
         ]
       );

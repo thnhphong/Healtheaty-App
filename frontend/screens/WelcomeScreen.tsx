@@ -8,17 +8,30 @@ import {
   SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { NavigationProp } from '@react-navigation/native';
 import { welcomeStyles } from '../styles/WelcomeScreenStyles';
 
-const WelcomeScreen: React.FC = () => {
+// Define your root stack param list
+type RootStackParamList = {
+  Welcome: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  UserInfo: undefined;
+  Home: undefined;
+  Profile: undefined;
+};
+
+interface WelcomeScreenProps {
+  navigation: NavigationProp<RootStackParamList>;
+}
+
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   const handleSignInPress = (): void => {
-    // Navigate to Sign In screen (frontend only)
-    console.log('Navigate to Sign In');
+    navigation.navigate('SignIn');
   };
 
   const handleCreateAccountPress = (): void => {
-    // Navigate to Sign Up screen (frontend only)
-    console.log('Navigate to Sign Up');
+    navigation.navigate('SignUp');
   };
 
   return (
