@@ -1,5 +1,7 @@
 // frontend/styles/SignUpScreenStyles.ts
 import { StyleSheet } from 'react-native';
+import Colors from '../constants/Colors';
+
 export const signUpStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -39,13 +41,13 @@ export const signUpStyles = StyleSheet.create({
     marginBottom: 30,
   },
   input: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.primaryInput,
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 25,
     fontSize: 16,
     marginBottom: 20,
-    color: '#333',
+    color: Colors.primaryInputText,
   },
   signUpButton: {
     backgroundColor: '#FF6B35',

@@ -10,6 +10,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { welcomeStyles } from '../styles/WelcomeScreenStyles';
+import SignInBtn from '../components/ui/SignInBtn';
+import SignUpBtn from '../components/ui/SignUpBtn';
+import Logo from '../screens/Logo';
 
 // Define your root stack param list
 type RootStackParamList = {
@@ -38,12 +41,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
     <SafeAreaView style={welcomeStyles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#FF6B35" />
       
-      {/* Header với logo */}
+      {/* Logo */}
       <View style={welcomeStyles.header}>
-        <View style={welcomeStyles.logoContainer}>
-          <Ionicons name="restaurant" size={40} color="#FFFFFF" />
-          <Text style={welcomeStyles.logoText}>Healthy Eating App</Text>
-        </View>
+        <Logo />
       </View>
 
       {/* Main Content */}
@@ -67,21 +67,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
 
       {/* Buttons */}
       <View style={welcomeStyles.buttonContainer}>
-        <TouchableOpacity 
-          style={welcomeStyles.signInButton}
-          onPress={handleSignInPress}
-          activeOpacity={0.8}
-        >
-          <Text style={welcomeStyles.signInButtonText}>Sign In</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={welcomeStyles.createAccountButton}
-          onPress={handleCreateAccountPress}
-          activeOpacity={0.8}
-        >
-          <Text style={welcomeStyles.createAccountButtonText}>Create an account</Text>
-        </TouchableOpacity>
+        <SignInBtn onPress={handleSignInPress} />
+        <SignUpBtn onPress={handleCreateAccountPress} />
       </View>
     </SafeAreaView>
   );

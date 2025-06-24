@@ -1,4 +1,3 @@
-// frontend/screens/SignInScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -12,8 +11,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { signInStyles } from '../styles/SignInScreenStyles';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../backend/config/firebase';
 
-// Define your root stack param list
 type RootStackParamList = {
   Welcome: undefined;
   SignIn: undefined;
@@ -48,54 +48,73 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
 
   const validateForm = (): boolean => {
     const { email, password } = formData;
-    
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+      Alert.alert('Error', 'Please fill in all fields');
       return false;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Lỗi', 'Email không hợp lệ');
+      Alert.alert('Error', 'Invalid email address');
       return false;
     }
-
     return true;
   };
 
   const handleSignIn = async (): Promise<void> => {
     if (!validateForm()) return;
-
+    const { email, password } = formData;
     setLoading(true);
+
     try {
-      // Simulate sign in process
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      Alert.alert('Thành công', 'Đăng nhập thành công!');
-      navigation.navigate('Home');
+      // Firebase Auth handles password verification automatically
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      console.log('Signed in:', user.uid);
+
+      Alert.alert('Success', 'Signed in successfully', [
+        { text: 'OK', onPress: () => navigation.navigate('Home') }
+      ]);
     } catch (error: any) {
-      Alert.alert('Đăng nhập thất bại', 'Có lỗi xảy ra, vui lòng thử lại');
-    } finally {
+      console.error('Sign-in error:', error);
       setLoading(false);
+      
+      let errorMessage = 'Failed to sign in. Please try again.';
+      
+      switch (error.code) {
+        case 'auth/user-not-found':
+          errorMessage = 'No account found with this email.';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'No internet connection.';
+          break;
+        default:
+          if (error.message) errorMessage = error.message;
+      }
+      
+      Alert.alert('Error', errorMessage);
+      return;
     }
-  };
-
-  const handleForgotPassword = (): void => {
-    Alert.alert('Thông báo', 'Tính năng này sẽ được cập nhật sớm');
-  };
-
-  const handleGoogleSignIn = (): void => {
-    Alert.alert('Thông báo', 'Tính năng này sẽ được cập nhật sớm');
-  };
-
-  const handleNavigateToSignUp = (): void => {
-    navigation.navigate('SignUp');
+    
+    setLoading(false);
   };
 
   return (
     <SafeAreaView style={signInStyles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
-      {/* Header */}
+
       <View style={signInStyles.header}>
         <View style={signInStyles.logoContainer}>
           <Ionicons name="restaurant" size={24} color="#FF6B35" />
@@ -103,7 +122,6 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Content */}
       <View style={signInStyles.content}>
         <Text style={signInStyles.title}>Sign In</Text>
         <Text style={signInStyles.subtitle}>Add your details to login</Text>
@@ -117,68 +135,40 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
             onChangeText={(value) => handleInputChange('email', value)}
             keyboardType="email-address"
             autoCapitalize="none"
-            autoCorrect={false}
             editable={!loading}
           />
-
           <TextInput
             style={signInStyles.input}
             placeholder="Password"
             placeholderTextColor="#999"
             value={formData.password}
             onChangeText={(value) => handleInputChange('password', value)}
-            secureTextEntry={true}
-            autoCapitalize="none"
+            secureTextEntry
             editable={!loading}
           />
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[signInStyles.signInButton, loading && signInStyles.disabledButton]}
             onPress={handleSignIn}
             disabled={loading}
-            activeOpacity={0.8}
           >
             <Text style={signInStyles.signInButtonText}>
-              {loading ? 'Đang đăng nhập...' : 'Sign In'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={signInStyles.forgotPassword}
-            onPress={handleForgotPassword}
-            disabled={loading}
-            activeOpacity={0.8}
-          >
-            <Text style={signInStyles.forgotPasswordText}>Forgot your password?</Text>
+          <TouchableOpacity onPress={() => Alert.alert('Coming Soon')}>
+            <Text style={signInStyles.forgotPasswordText}>Forgot password?</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={signInStyles.divider}>
-          <Text style={signInStyles.dividerText}>Or Sign In With</Text>
-        </View>
-
-        <TouchableOpacity 
-          style={signInStyles.googleButton}
-          onPress={handleGoogleSignIn}
-          disabled={loading}
-          activeOpacity={0.8}
-        >
-          <Text style={signInStyles.googleButtonText}>Sign In With Google</Text>
-        </TouchableOpacity>
-
         <View style={signInStyles.footer}>
-          <Text style={signInStyles.footerText}>Don't have an Account? </Text>
-          <TouchableOpacity 
-            onPress={handleNavigateToSignUp}
-            disabled={loading}
-            activeOpacity={0.8}
-          >
+          <Text style={signInStyles.footerText}>Don't have an account?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={signInStyles.signUpLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Bottom indicator */}
       <View style={signInStyles.bottomIndicator} />
     </SafeAreaView>
   );

@@ -1,0 +1,37 @@
+# Create user
+mutation CreateUser($email: String!, $name: String!, $password: String!, $phone: String) {
+  user_insert(data: {
+    email: $email
+    name: $name
+    password: $password
+    phone: $phone
+  })
+}
+
+# Create user profile info
+mutation CreateUserInfo($userId: String!, $activityFactor: String, $age: Int, $gender: String, $height: Int, $weight: Int) {
+  userInfo_insert(data: {
+    userId: $userId
+    activityFactor: $activityFactor
+    age: $age
+    gender: $gender
+    height: $height
+    weight: $weight
+  })
+}
+
+# Update user info
+mutation UpdateUserInfo($id: UUID!, $activityFactor: String, $age: Int, $gender: String, $height: Int, $weight: Int) {
+  userInfo_update(id: $id, data: {
+    activityFactor: $activityFactor
+    age: $age
+    gender: $gender
+    height: $height
+    weight: $weight
+  })
+}
+
+# Delete user info
+mutation DeleteUserInfo($id: UUID!) {
+  userInfo_delete(id: $id)
+}

@@ -1,0 +1,11 @@
+{
+  "dataconnect": {
+    "source": "./dataconnect",
+    "generate": {
+      "javascriptSdk": {
+        "outputDir": "./dataconnect-generated/js",
+        "package": "@lib/dataconnect"
+      }
+    }
+  }
+}

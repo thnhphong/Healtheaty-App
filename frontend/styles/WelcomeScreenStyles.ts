@@ -13,7 +13,7 @@ export const welcomeStyles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+    },
   logoText: {
     color: '#FFFFFF',
     fontSize: 18,
@@ -34,28 +34,31 @@ export const welcomeStyles = StyleSheet.create({
     marginBottom: 20,
   },
   healthyText: {
-    fontSize: 32,
-    fontWeight: '300',
+    fontSize: 40,
+    fontWeight: 'bold',
     color: '#FFFFFF',
   },
   eatingText: {
-    fontSize: 32,
-    fontWeight: '300',
+    fontSize: 44,
+    fontWeight: '700',
     color: '#FFE5B4',
   },
   betterText: {
-    fontSize: 32,
+    fontSize: 40,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   subtitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 20,
     textAlign: 'center',
     lineHeight: 22,
     opacity: 0.9,
+    fontStyle: 'italic',
+    fontWeight: '500',
   },
   buttonContainer: {
+    gap: 16,
     paddingHorizontal: 30,
     paddingBottom: 40,
   },

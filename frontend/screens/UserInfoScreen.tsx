@@ -1,4 +1,4 @@
-// screens/UserInfoScreen.tsx
+// frontend/screens/SignUpScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -34,7 +34,6 @@ interface UserInfo {
   weight: string;
   activityFactor: number;
 }
-
 interface ActivityLevel {
   value: number;
   label: string;

@@ -1,5 +1,6 @@
 // frontend/styles/SignInScreenStyles.ts
 import { StyleSheet } from 'react-native';
+import Colors from '../constants/Colors';
 
 export const signInStyles = StyleSheet.create({
   container: {
@@ -40,13 +41,13 @@ export const signInStyles = StyleSheet.create({
     marginBottom: 30,
   },
   input: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.primaryInput,
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 25,
     fontSize: 16,
     marginBottom: 20,
-    color: '#333',
+    color: Colors.primaryInputText,
   },
   signInButton: {
     backgroundColor: '#FF6B35',
@@ -62,6 +63,7 @@ export const signInStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+    
   },
   forgotPassword: {
     alignItems: 'center',
