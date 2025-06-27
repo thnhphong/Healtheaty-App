@@ -27,12 +27,14 @@ export const signUpStyles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   title: {
+    textAlign: 'center',
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
   },
   subtitle: {
+    textAlign: 'center',
     fontSize: 16,
     color: '#666',
     marginBottom: 40,

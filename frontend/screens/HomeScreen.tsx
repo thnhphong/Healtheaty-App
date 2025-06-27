@@ -11,6 +11,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/HomeScreenStyles';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../backend/config/firebase';
+import { auth } from '../../backend/config/firebase';
+import { getAuth } from 'firebase/auth';
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -19,6 +23,7 @@ type RootStackParamList = {
   UserInfo: undefined;
   Home: undefined;
   Profile: undefined;
+  EditProfile: undefined;
 };
 
 // Fixed: Correct prop type definition
@@ -36,6 +41,8 @@ interface UserInfo {
   height: number;
   age: number;
   activityFactor: number;
+  bmr: number;
+  tdee: number;
 }
 
 interface CalorieData {
@@ -51,7 +58,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [calorieData, setCalorieData] = useState<CalorieData>({
     bmr: 0,
     tdee: 0,
-    consumed: 850, // Example
+    consumed: 0, 
     remaining: 0
   });
 
@@ -59,32 +66,89 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     loadUserData();
   }, []);
 
+  // Normalize gender 
+  const normalizedGender = (gender: string): 'male' | 'female' | null => {
+    if(!gender) return null;
+    const g = gender.toLocaleLowerCase()
+    if(g === 'male' || g === 'female') return g;
+    return null;
+  }
+  
   const loadUserData = async () => {
     try {
-      // Mock data for demonstration
-      setUserData({ fullName: 'John Doe' });
-      setUserInfo({
-        gender: 'male',
-        weight: 70,
-        height: 175,
-        age: 25,
-        activityFactor: 3
-      });
-      
-      // Mock calorie calculations
-      const mockBMR = 1680;
-      const mockTDEE = 2300;
-      setCalorieData(prev => ({
-        ...prev,
-        bmr: mockBMR,
-        tdee: mockTDEE,
-        remaining: mockTDEE - prev.consumed
-      }));
+      const auth = getAuth();
+      const user = auth.currentUser;
+  
+      if (!user) {
+        Alert.alert('User not logged in', 'Please sign in to continue.');
+        return;
+      }
+  
+      const userInfoDocRef = doc(db, 'userInfo', user.uid);
+      const userInfoDoc = await getDoc(userInfoDocRef);
+  
+      if (!userInfoDoc.exists()) {
+        Alert.alert('No user info found', 'Please complete your profile information.');
+        return;
+      }
+  
+      const userInfoData = userInfoDoc.data() as UserInfo;
+  
+      const userDocRef = doc(db, 'user', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if(userDoc.exists()){
+        const userData = userDoc.data()
+        setUserData({
+          fullName: userData.fullName,
+          email: userData.email
+        });
+      }else{
+        setUserData({
+          fullName: 'User',
+          email: ''
+        });
+      }
+        
+      const gender = normalizedGender(userInfoData.gender);
+  
+      if (
+        gender &&
+        typeof userInfoData.age === 'number' &&
+        typeof userInfoData.height === 'number' &&
+        typeof userInfoData.weight === 'number' &&
+        typeof userInfoData.activityFactor === 'number' &&
+        typeof userInfoData.bmr === 'number' &&
+        typeof userInfoData.tdee === 'number'
+      ) {
+        setUserInfo({
+          gender,
+          age: userInfoData.age,
+          height: userInfoData.height,
+          weight: userInfoData.weight,
+          activityFactor: userInfoData.activityFactor,
+          bmr: userInfoData.bmr,
+          tdee: userInfoData.tdee,
+        });
+  
+        const consumed = 800; // placeholder
+  
+        setCalorieData({
+          bmr: userInfoData.bmr,
+          tdee: userInfoData.tdee,
+          consumed: consumed,
+          remaining: userInfoData.tdee - consumed,
+        });
+  
+        setUserData({ fullName: userData.fullName || 'User' });
+      } else {
+        Alert.alert('Invalid user data', 'Please complete your profile information.');
+      }
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tải dữ liệu người dùng');
+      console.error('Error loading user data:', error);
+      Alert.alert('Error', 'Failed to load user data. Please try again later.');
     }
   };
-
+  
   const getCurrentDate = (): string => {
     const date = new Date();
     const months = [

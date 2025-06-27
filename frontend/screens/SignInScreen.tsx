@@ -21,6 +21,7 @@ type RootStackParamList = {
   UserInfo: undefined;
   Home: undefined;
   Profile: undefined;
+  EditProfile: undefined;
 };
 
 interface SignInScreenProps {
@@ -160,6 +161,18 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
           <TouchableOpacity onPress={() => Alert.alert('Coming Soon')}>
             <Text style={signInStyles.forgotPasswordText}>Forgot password?</Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={signInStyles.signInGoogleContainer}>
+          <Text style={signInStyles.signInGoogleText}>Or Sign In With</Text>
+          <TouchableOpacity
+            style={signInStyles.signInGoogleButton}
+            onPress={() => Alert.alert('Google Sign-In Coming Soon')}
+            disabled={loading}
+            >
+              <Ionicons name="logo-google" size={24} color="#FFFFFF" />
+              <Text style={signInStyles.signInGoogleButtonText}>Sign In With Google</Text>
+            </TouchableOpacity>
         </View>
 
         <View style={signInStyles.footer}>

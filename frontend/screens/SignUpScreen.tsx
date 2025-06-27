@@ -18,6 +18,7 @@ type RootStackParamList = {
   UserInfo: undefined;
   Home: undefined;
   Profile: undefined;
+  EditProfile: undefined;
 };
 
 interface SignUpScreenProps {
@@ -78,7 +79,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
       // Save additional user data in Firestore (NO PASSWORD - Firebase Auth handles this)
       await setDoc(doc(db, 'user', user.uid), {
         email,
-        name: fullName,
+        fullName: fullName,
         phone,
         createdAt: serverTimestamp()
         // Don't store password - Firebase Auth handles this securely

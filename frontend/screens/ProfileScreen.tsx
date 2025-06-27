@@ -11,6 +11,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/ProfileScreenStyles';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../backend/config/firebase';
+import { auth } from '../../backend/config/firebase';
+
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -19,6 +23,7 @@ type RootStackParamList = {
   UserInfo: undefined;
   Home: undefined;
   Profile: undefined;
+  EditProfile: undefined;
 };
 
 // Fixed: Correct prop type definition
@@ -50,22 +55,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   }, []);
 
   const loadUserData = async () => {
-    try {
-      // Mock data for demonstration
-      setUserData({
-        fullName: 'John Doe',
-        email: 'john.doe@example.com'
-      });
-      setUserInfo({
-        age: 25,
-        gender: 'male',
-        height: 175,
-        weight: 70,
-        activityFactor: 3
-      });
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tải dữ liệu người dùng');
+    const user = auth.currentUser;
+  if (!user) {
+    console.log('User not looged in');
+    return;
+  }
+  try{
+    const userDocRef = doc(db, 'user', user.uid)
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data() as UserData;
+      setUserData(userData);
+    }else{
+      console.log('No user data found');
     }
+  }
+  catch (error) {
+    console.error('Error loading user data:', error);
+  }
+
   };
 
   const handleSignOut = async () => {
@@ -136,10 +145,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <View style={styles.avatarContainer}>
             <Ionicons name="person-circle" size={80} color="#FF6B35" />
           </View>
-          <Text style={styles.userName}>{userData?.fullName || 'Người dùng'}</Text>
+          <Text style={styles.userName}>{userData?.fullName || 'User'}</Text>
           <Text style={styles.userEmail}>{userData?.email}</Text>
           
-          <TouchableOpacity style={styles.editButton}>
+          <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile')}>
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
@@ -147,20 +156,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         {/* Stats Section */}
         {userInfo && (
           <View style={styles.statsSection}>
-            <Text style={styles.sectionTitle}>Thông tin sức khỏe</Text>
+            <Text style={styles.sectionTitle}>Health Information</Text>
             
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{userInfo.age}</Text>
-                <Text style={styles.statLabel}>Tuổi</Text>
+                <Text style={styles.statLabel}>Age</Text>
               </View>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{userInfo.height}cm</Text>
-                <Text style={styles.statLabel}>Chiều cao</Text>
+                <Text style={styles.statLabel}>Height</Text>
               </View>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{userInfo.weight}kg</Text>
-                <Text style={styles.statLabel}>Cân nặng</Text>
+                <Text style={styles.statLabel}>Weight</Text>
               </View>
               <View style={styles.statItem}>
                 <Text style={[styles.statValue, { color: getBMIStatus(calculateBMI()).color }]}>
@@ -171,21 +180,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Giới tính:</Text>
+              <Text style={styles.infoLabel}>Gender:</Text>
               <Text style={styles.infoValue}>
-                {userInfo.gender === 'male' ? 'Nam' : 'Nữ'}
+                {userInfo.gender === 'male' ? 'Male' : 'Female'}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Mức độ hoạt động:</Text>
+              <Text style={styles.infoLabel}>Activity Level:</Text>
               <Text style={styles.infoValue}>
                 {getActivityLevelText(userInfo.activityFactor)}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Tình trạng BMI:</Text>
+              <Text style={styles.infoLabel}>BMI Status:</Text>
               <Text style={[styles.infoValue, { color: getBMIStatus(calculateBMI()).color }]}>
                 {getBMIStatus(calculateBMI()).text}
               </Text>
@@ -197,31 +206,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         <View style={styles.menuSection}>
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="heart" size={24} color="#FF6B35" />
-            <Text style={styles.menuText}>Yêu thích</Text>
+            <Text style={styles.menuText}>Favorites</Text>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="notifications" size={24} color="#FF6B35" />
-            <Text style={styles.menuText}>Thông báo</Text>
+            <Text style={styles.menuText}>Notifications</Text>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="help-circle" size={24} color="#FF6B35" />
-            <Text style={styles.menuText}>Trợ giúp</Text>
+            <Text style={styles.menuText}>Help</Text>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="information-circle" size={24} color="#FF6B35" />
-            <Text style={styles.menuText}>Về ứng dụng</Text>
+            <Text style={styles.menuText}>About</Text>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
             <Ionicons name="log-out" size={24} color="#e74c3c" />
-            <Text style={[styles.menuText, { color: '#e74c3c' }]}>Đăng xuất</Text>
+            <Text style={[styles.menuText, { color: '#e74c3c' }]}>Log out</Text>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
         </View>

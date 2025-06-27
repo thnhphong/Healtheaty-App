@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.anonymous.healtheaty"
+  },
+  "ios": {
+    "bundleIdentifier": "com.anonymous.healtheaty"
+  }
+}

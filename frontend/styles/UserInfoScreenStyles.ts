@@ -40,29 +40,65 @@ export const userInfoStyles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
-  pickerContainer: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 25,
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-    color: '#333',
-  },
   submitButton: {
-    backgroundColor: '#FF6B35',
-    paddingVertical: 16,
-    borderRadius: 25,
+    backgroundColor: '#4CAF50',  // green color
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
     marginTop: 20,
   },
   disabledButton: {
-    backgroundColor: '#FFB399',
+    backgroundColor: '#A5D6A7',  // lighter green when disabled
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: 'white',
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  // Add these to your existing styles
+  pickerContainer: {
+    marginBottom: 16,
+  },
+  pickerLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: '#333',
+  },
+  genderContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  genderButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  genderButtonSelected: {
+    backgroundColor: '#FF6B35',
+    borderColor: '#FF6B35',
+  },
+  genderButtonText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  genderButtonTextSelected: {
+    color: '#fff',
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+  pickerInput: {
+    height: 50,
   },
 });

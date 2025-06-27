@@ -63,14 +63,17 @@ export const signInStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
-    
-  },
-  forgotPassword: {
-    alignItems: 'center',
   },
   forgotPasswordText: {
     color: '#666',
     fontSize: 14,
+    textAlign: 'center',
+  },
+  signInGoogleText: {
+    color: '#333',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 10,
   },
   divider: {
     alignItems: 'center',
@@ -86,11 +89,44 @@ export const signInStyles = StyleSheet.create({
     borderRadius: 25,
     marginBottom: 30,
   },
-  googleButtonText: {
+  signInGoogleContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 30,
+  },
+  signInGoogleText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  signInGoogleButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  googleButtonText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  signInGoogleButton: {
+    gap: 10,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: '#DB4437',
+    paddingVertical: 16,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    width: '100%',
+    alignItems: 'center',
   },
   footer: {
     flexDirection: 'row',
@@ -113,4 +149,5 @@ export const signInStyles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 10,
   },
+
 });
