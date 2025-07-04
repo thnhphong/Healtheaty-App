@@ -24,6 +24,8 @@ export const Colors = {
   grayLight: '#F5F5F5',
   grayMedium: '#BDBDBD',
   grayDark: '#424242',
+  noti: '#FE6303',
+  redGoogle: '#FF0000',
   
   // Background Colors
   background: '#FAFAFA',

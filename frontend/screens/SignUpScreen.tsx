@@ -7,7 +7,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { signUpStyles } from '../styles/SignUpScreenStyles';
 import { NavigationProp } from '@react-navigation/native';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../backend/config/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -72,6 +72,18 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
     setLoading(true);
 
     try {
+      //check if email already exists
+      const usersRef = collection(db, 'user');
+      const q = query(usersRef, where('email', '==', email.toLowerCase()))
+      const querySnapshot = await getDocs(q);
+      console.log('Firestore query result:', querySnapshot.empty ? 'No matches' : 'Email found');
+      
+      if (!querySnapshot.empty) {
+        Alert.alert('Error', 'Email already registered');
+        setLoading(false);
+        return;
+      }
+
       // Create Firebase Auth user - Firebase handles password hashing securely
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;

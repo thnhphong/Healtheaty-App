@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  Image,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -13,8 +14,12 @@ import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/HomeScreenStyles';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../backend/config/firebase';
-import { auth } from '../../backend/config/firebase';
 import { getAuth } from 'firebase/auth';
+//circular calorie progrss from components/ui
+import CircularCalorieProgress from '../components/ui/CircularCalorieProgress';
+//bottom nav
+import BottomNavigation from '../components/ui/BottomNavigation';
+
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -43,6 +48,7 @@ interface UserInfo {
   activityFactor: number;
   bmr: number;
   tdee: number;
+  avatarUrl?: string;
 }
 
 interface CalorieData {
@@ -118,7 +124,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         typeof userInfoData.weight === 'number' &&
         typeof userInfoData.activityFactor === 'number' &&
         typeof userInfoData.bmr === 'number' &&
-        typeof userInfoData.tdee === 'number'
+        typeof userInfoData.tdee === 'number' &&
+        typeof userInfoData.avatarUrl === 'string' 
       ) {
         setUserInfo({
           gender,
@@ -128,9 +135,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           activityFactor: userInfoData.activityFactor,
           bmr: userInfoData.bmr,
           tdee: userInfoData.tdee,
+          avatarUrl: userInfoData.avatarUrl || '', 
         });
   
-        const consumed = 800; // placeholder
+        const consumed = 900; // placeholder
   
         setCalorieData({
           bmr: userInfoData.bmr,
@@ -145,7 +153,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error loading user data:', error);
-      Alert.alert('Error', 'Failed to load user data. Please try again later.');
     }
   };
   
@@ -197,13 +204,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           Hi {userData?.fullName?.split(' ')[0] || 'User'}
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="person-circle" size={32} color="#FF6B35" />
+          <View style={styles.profileSection}>
+            {userInfo?.avatarUrl ? (
+              <Image source={{uri: userInfo.avatarUrl}} style={styles.avatar}/>
+            ) : (
+               <Ionicons name="person-circle" size={50} color="#FF6B35" />
+            )}
+            </View>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Calorie Card */}
         <View style={styles.calorieCard}>
+          <View style={styles.calorieTextContainer}>
           <View style={styles.calorieHeader}>
             <Ionicons name="restaurant" size={24} color="#FF6B35" />
             <Text style={styles.calorieTitle}>Daily Intake</Text>
@@ -213,10 +227,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Text style={styles.calorieNumber}>{calorieData.remaining}</Text>
             <Text style={styles.calorieLabel}>Calories Left</Text>
           </View>
-          
-          <Text style={styles.calorieSubtext}>
-            Your Calorie Intake is {Math.round((calorieData.consumed / calorieData.tdee) * 100)}%
-          </Text>
+          </View>
+
+          <CircularCalorieProgress consumed={calorieData.consumed} tdee={calorieData.tdee}/>
         </View>
 
         {/* Calendar */}
@@ -261,37 +274,25 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{calorieData.bmr}</Text>
+            <Image style={styles.icon} source={require('../images/icons/bmr.png')}></Image>
             <Text style={styles.statLabel}>BMR</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{calorieData.tdee}</Text>
+            <Image style={styles.icon} source={require('../images/icons/tdee.png')}></Image>
             <Text style={styles.statLabel}>TDEE</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{calorieData.consumed}</Text>
+            <Image style={styles.icon} source={require('../images/icons/consumed.png')}></Image>
             <Text style={styles.statLabel}>Consumed</Text>
           </View>
         </View>
-      </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home" size={24} color="#FF6B35" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItemCenter}>
-          <Ionicons name="add" size={30} color="#FFF" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="heart" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
+
+      </ScrollView>
+       {/* Bottom Navigation */}
+       <BottomNavigation />
     </SafeAreaView>
   );
 };

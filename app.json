@@ -1,8 +1,35 @@
 {
-  "android": {
-    "package": "com.anonymous.healtheaty"
-  },
-  "ios": {
-    "bundleIdentifier": "com.anonymous.healtheaty"
+  "expo": {
+    "name": "Healtheaty",
+    "slug": "healtheaty",
+    "scheme": "healtheaty", 
+    "version": "1.0.0",
+    "entryPoint": "./index.js",
+    "owner": "phong101204",
+    "android": {
+      "package": "com.anonymous.healtheaty"
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.healtheaty"
+    },
+    "plugins": [
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosClientId": "974622630670-rouo2bolqc1jdph7k4kdrjpjoskdhqqu.apps.googleusercontent.com",
+          "iosUrlScheme": "com.googleusercontent.apps.974622630670-rouo2bolqc1jdph7k4kdrjpjoskdhqqu", 
+          "webClientId": "974622630670-l66g0ku545r5n5kpka9jf1g6f6o1j2f0.apps.googleusercontent.com",
+          "androidClientId": "974622630670-uqmjojaas67v1qb1fq1h3s9f7dli732m.apps.googleusercontent.com"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Healtheaty to access your camera.",
+          "photosPermission": "Allow Healtheaty to access your photos."
+        }
+      ],
+      "expo-web-browser"
+    ]
   }
 }

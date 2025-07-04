@@ -33,6 +33,11 @@ export const styles = StyleSheet.create({
   avatarContainer: {
     marginBottom: 15,
   },
+  avartar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',

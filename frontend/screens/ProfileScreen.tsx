@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  Image,
   SafeAreaView,
   TouchableOpacity,
   Alert,
@@ -14,6 +15,8 @@ import { styles } from '../styles/ProfileScreenStyles';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../backend/config/firebase';
 import { auth } from '../../backend/config/firebase';
+import BottomNavigation from '../components/ui/BottomNavigation';
+//bottom navigation
 
 
 type RootStackParamList = {
@@ -42,6 +45,9 @@ interface UserInfo {
   height: number;
   weight: number;
   activityFactor: number;
+  bmr: number;
+  tdee: number;
+  avatarUrl?: string;
 }
 
 // Removed duplicate HomeScreenProps interface - not needed here
@@ -49,6 +55,7 @@ interface UserInfo {
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  let avatarUrl = userInfo?.avatarUrl;
 
   useEffect(() => {
     loadUserData();
@@ -64,9 +71,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     const userDocRef = doc(db, 'user', user.uid)
     const userDoc = await getDoc(userDocRef);
 
+    //userInfo
+    const userInfoDocRef = doc(db, 'userInfo', user.uid)
+    const userInfoDoc = await getDoc(userInfoDocRef);
+
     if (userDoc.exists()) {
       const userData = userDoc.data() as UserData;
+      const userInfo = userInfoDoc.data() as UserInfo;
       setUserData(userData);
+      setUserInfo(userInfo);
     }else{
       console.log('No user data found');
     }
@@ -79,36 +92,38 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   const handleSignOut = async () => {
     Alert.alert(
-      'Đăng xuất',
-      'Bạn có chắc chắn muốn đăng xuất?',
+      'Log Out',
+      'Are you sure to log out?',
       [
         {
-          text: 'Hủy',
+          text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Đăng xuất',
+          text: 'Log Out',
           onPress: async () => {
             try {
               navigation.navigate('Welcome');
             } catch (error) {
-              Alert.alert('Lỗi', 'Không thể đăng xuất');
+              Alert.alert('Error', 'Logging out failed');
             }
           },
+          style: 'destructive'
         },
-      ]
+      ],
+      { cancelable: true }
     );
   };
 
   const getActivityLevelText = (level: number): string => {
     const levels: { [key: number]: string } = {
-      1: 'Ít vận động',
-      2: 'Vận động nhẹ',
-      3: 'Vận động vừa',
-      4: 'Vận động nhiều',
-      5: 'Vận động cực nhiều'
+      1: 'Sedentary 🛋️',
+      2: 'Light activity 🚶',
+      3: 'Moderate activity 🏃',
+      4: 'Very active 🏋️',
+      5: 'Extra active 🚴',
     };
-    return levels[level] || 'Không xác định';
+    return levels[level] || 'Undefined';
   };
 
   const calculateBMI = (): number => {
@@ -120,10 +135,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   const getBMIStatus = (bmi: number): { text: string; color: string } => {
-    if (bmi < 18.5) return { text: 'Thiếu cân', color: '#3498db' };
-    if (bmi < 25) return { text: 'Bình thường', color: '#27ae60' };
-    if (bmi < 30) return { text: 'Thừa cân', color: '#f39c12' };
-    return { text: 'Béo phì', color: '#e74c3c' };
+    if (bmi < 18.5) return { text: 'Uderweight', color: '#3498db' };
+    if (bmi < 25) return { text: 'Normal', color: '#27ae60' };
+    if (bmi < 30) return { text: 'Overweight', color: '#f39c12' };
+    return { text: 'Obese', color: 'red' };
   };
 
   return (
@@ -142,9 +157,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Info */}
         <View style={styles.profileSection}>
+          //avatar 
           <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle" size={80} color="#FF6B35" />
+            //check if userInfo has avatarUrl
+            {userInfo?.avatarUrl ? (
+              <Image source={{ uri: userInfo.avatarUrl }} style={styles.avartar} />
+            ) : (
+              <View>
+                <Ionicons name="person-circle" size={120} color="#FF6B35" />
+              </View>
+            )}
           </View>
+          
           <Text style={styles.userName}>{userData?.fullName || 'User'}</Text>
           <Text style={styles.userEmail}>{userData?.email}</Text>
           
@@ -236,24 +260,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItemCenter}>
-          <Ionicons name="add" size={30} color="#FFF" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="heart" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person" size={24} color="#FF6B35" />
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation />
     </SafeAreaView>
   );
 };

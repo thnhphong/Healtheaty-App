@@ -6,13 +6,20 @@ import {
   TouchableOpacity,
   StatusBar,
   SafeAreaView,
-  Alert
-} from 'react-native';
+  Alert, 
+} from 'react-native'
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { signInStyles } from '../styles/SignInScreenStyles';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithCredential } from 'firebase/auth';
 import { auth } from '../../backend/config/firebase';
+import { useEffect } from 'react';
+
+
+WebBrowser.maybeCompleteAuthSession(); // Required for iOS
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -39,6 +46,39 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
     password: ''
   });
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Google Auth Session with your Expo redirect URI
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: '974622630670-l66g0ku545r5n5kpka9jf1g6f6o1j2f0.apps.googleusercontent.com',
+    iosClientId: '974622630670-rouo2bolqc1jdph7k4kdrjpjoskdhqqu.apps.googleusercontent.com',
+    androidClientId: '974622630670-uqmjojaas67v1qb1fq1h3s9f7dli732m.apps.googleusercontent.com',
+    redirectUri: makeRedirectUri({
+      native: 'healtheaty//redirect', 
+    }),
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      setLoading(false); // Reset loading state
+      const { idToken } = response.authentication!;
+      const credential = GoogleAuthProvider.credential(idToken);
+      signInWithCredential(auth, credential)
+        .then(userCredential => {
+          console.log('Google Sign-In successful:', userCredential.user.uid);
+          navigation.navigate('UserInfo');
+        })
+        .catch(error => {
+          console.error('Firebase Sign-In error:', error);
+          Alert.alert('Error', `Failed to sign in with Google: ${error.message}`);
+        });
+    } else if (response?.type === 'error') {
+      setLoading(false); // Reset loading state
+      console.error('Google Auth error:', response.error);
+      Alert.alert('Error', `Google Sign-In failed: ${response.error?.message || 'Unknown error'}`);
+    } else if (response?.type === 'dismiss') {
+      setLoading(false); // Reset loading state if user dismisses the auth session
+    }
+  }, [response]);
 
   const handleInputChange = (field: keyof SignInFormData, value: string): void => {
     setFormData(prev => ({
@@ -112,6 +152,17 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
     setLoading(false);
   };
 
+  const handleGoogleSignIn = async (): Promise<void> => {
+    if (loading || !request) return; // Prevent multiple calls
+    setLoading(true); // Set loading to true to disable button
+    try {
+      await promptAsync();
+    } catch (error) {
+      setLoading(false);
+      console.error('Google Sign-In error:', error);
+      Alert.alert('Error', 'Failed to initiate Google Sign-In');
+    }
+  };
   return (
     <SafeAreaView style={signInStyles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -167,12 +218,12 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
           <Text style={signInStyles.signInGoogleText}>Or Sign In With</Text>
           <TouchableOpacity
             style={signInStyles.signInGoogleButton}
-            onPress={() => Alert.alert('Google Sign-In Coming Soon')}
+            onPress={handleGoogleSignIn}
             disabled={loading}
-            >
-              <Ionicons name="logo-google" size={24} color="#FFFFFF" />
-              <Text style={signInStyles.signInGoogleButtonText}>Sign In With Google</Text>
-            </TouchableOpacity>
+          >
+            <Ionicons name="logo-google" size={24} color="#FFFFFF" />
+            <Text style={signInStyles.signInGoogleButtonText}>Sign In With Google</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={signInStyles.footer}>

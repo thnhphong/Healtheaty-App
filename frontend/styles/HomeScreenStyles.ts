@@ -2,6 +2,15 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  profileSection: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -24,10 +33,16 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   calorieCard: {
-    backgroundColor: '#FF9500',
+    backgroundColor: '#FFA500',
     borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    padding: 18,
+    margin: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  calorieTextContainer: {
+    flex: 1,
   },
   calorieHeader: {
     flexDirection: 'row',
@@ -51,7 +66,8 @@ export const styles = StyleSheet.create({
   },
   calorieLabel: {
     color: '#FFF',
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: 600,
     opacity: 0.9,
   },
   calorieSubtext: {
@@ -150,4 +166,9 @@ export const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 15,
   },
+  icon:{
+    width: 30,
+    height: 30,
+    borderRadius: 100,
+  }
 });
