@@ -1,0 +1,38 @@
+query GetUser($id: String!) {
+  user(id: $id) {
+    id
+    email
+    name
+    createdAt
+  }
+}
+
+query GetUserInfo($id: UUID!) {
+  userInfo(id: $id) {
+    id
+    userId
+    activityFactor
+    age
+    gender
+    height
+    weight
+    createdAt
+  }
+}
+
+query GetAllUsers {
+  users {
+    id
+    email
+    name
+    createdAt
+  }
+}
+
+query getUserByEmail($email: String!) {
+  users(where: { email: { eq: $email } }, limit: 1) {
+    id
+    email
+    password
+  }
+}
