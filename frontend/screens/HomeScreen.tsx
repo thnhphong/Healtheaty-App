@@ -292,7 +292,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
       </ScrollView>
        {/* Bottom Navigation */}
-       <BottomNavigation />
+       <BottomNavigation navigation={navigation} />
     </SafeAreaView>
   );
 };

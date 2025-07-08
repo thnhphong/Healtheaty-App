@@ -350,7 +350,7 @@ export const styles = StyleSheet.create({
   },
 
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF6B35',
     borderRadius: 100,
     paddingVertical: 16,
     alignItems: 'center',
@@ -364,13 +364,8 @@ export const styles = StyleSheet.create({
   },
 
   saveButtonPressed: {
-    backgroundColor: '#0056b3',
+    backgroundColor: '#FF6C35',
     transform: [{ scale: 0.98 }],
-  },
-
-  saveButtonDisabled: {
-    backgroundColor: '#6c757d',
-    shadowOpacity: 0.1,
   },
 
   saveButtonText: {

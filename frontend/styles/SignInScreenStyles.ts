@@ -2,7 +2,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../constants/Colors';
 
-export const signInStyles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -141,13 +141,6 @@ export const signInStyles = StyleSheet.create({
     color: '#FF6B35',
     fontSize: 14,
     fontWeight: '600',
-  },
-  bottomIndicator: {
-    height: 4,
-    backgroundColor: '#333',
-    marginHorizontal: 150,
-    borderRadius: 2,
-    marginBottom: 10,
   },
 
 });

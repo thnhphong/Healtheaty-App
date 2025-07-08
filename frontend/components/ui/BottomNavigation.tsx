@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Home, Calendar, ScanLine, Clock, User } from 'lucide-react-native'; 
+import { NavigationProp } from '@react-navigation/native';
+//import navigation
+import { useNavigation } from '@react-navigation/native';
+//inside props
+interface BottomNavigationProps {
+  navigation: NavigationProp<any>;
+}
 
-const BottomNavigation = () => {
+const BottomNavigation:  React.FC<BottomNavigationProps> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Home');
 
   const tabs = [
@@ -15,6 +22,11 @@ const BottomNavigation = () => {
 
   const handleTabPress = (tabName: string) => {
     setActiveTab(tabName);
+    if(tabName === 'Scan'){
+      navigation.navigate('ScanFood');
+    }else{
+      navigation.navigate(tabName);
+    }
   };
 
   return (

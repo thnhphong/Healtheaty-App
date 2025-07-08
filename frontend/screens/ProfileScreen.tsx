@@ -15,8 +15,9 @@ import { styles } from '../styles/ProfileScreenStyles';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../backend/config/firebase';
 import { auth } from '../../backend/config/firebase';
-import BottomNavigation from '../components/ui/BottomNavigation';
 //bottom navigation
+import BottomNavigation from '../components/ui/BottomNavigation';
+
 
 
 type RootStackParamList = {
