@@ -75,7 +75,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Normalize gender 
   const normalizedGender = (gender: string): 'male' | 'female' | null => {
     if(!gender) return null;
-    const g = gender.toLowerCase(); // Fixed: toLocaleLowerCase -> toLowerCase
+    const g = gender.toLowerCase(); 
     if(g === 'male' || g === 'female') return g;
     return null;
   }
@@ -100,7 +100,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   
       const userInfoData = userInfoDoc.data() as UserInfo;
   
-      // Fixed: Declare userDataFromDoc variable properly
+     
       let userDataFromDoc: UserData = { fullName: 'User' };
       
       const userDocRef = doc(db, 'user', user.uid);
@@ -174,7 +174,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     
     const days: (number | null)[] = [];
     
-    // Add empty cells for days before the first day of month
+    
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
