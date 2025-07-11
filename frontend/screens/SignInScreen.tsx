@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,19 +7,25 @@ import {
   StatusBar,
   SafeAreaView,
   Alert, 
-} from 'react-native'
+  Keyboard,
+  TouchableWithoutFeedback,
+  Platform,
+  KeyboardAvoidingView,
+  Button,
+  ScrollView,
+} from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
-import { signInStyles } from '../styles/SignInScreenStyles';
+import { styles } from '../styles/SignInScreenStyles';
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithCredential } from 'firebase/auth';
-import { auth } from '../../backend/config/firebase';
-import { useEffect } from 'react';
+import { auth, db } from '../../backend/config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 
-WebBrowser.maybeCompleteAuthSession(); // Required for iOS
+WebBrowser.maybeCompleteAuthSession();
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -29,6 +35,7 @@ type RootStackParamList = {
   Home: undefined;
   Profile: undefined;
   EditProfile: undefined;
+  ForgotPassword: undefined;
 };
 
 interface SignInScreenProps {
@@ -41,53 +48,56 @@ interface SignInFormData {
 }
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
-  const [formData, setFormData] = useState<SignInFormData>({
-    email: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState<SignInFormData>({ email: '', password: '' });
   const [loading, setLoading] = useState<boolean>(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const emailInputRef = useRef<TextInput>(null)
+  const passwordInputRef = useRef<TextInput>(null)
 
-  // Google Auth Session with your Expo redirect URI
+  // Keyboard listeners
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: '974622630670-l66g0ku545r5n5kpka9jf1g6f6o1j2f0.apps.googleusercontent.com',
-    iosClientId: '974622630670-rouo2bolqc1jdph7k4kdrjpjoskdhqqu.apps.googleusercontent.com',
-    androidClientId: '974622630670-uqmjojaas67v1qb1fq1h3s9f7dli732m.apps.googleusercontent.com',
-    redirectUri: makeRedirectUri({
-      native: 'healtheaty//redirect', 
-    }),
+    clientId: 'YOUR_CLIENT_ID',
+    iosClientId: 'YOUR_IOS_CLIENT_ID',
+    androidClientId: 'YOUR_ANDROID_CLIENT_ID',
+    redirectUri: makeRedirectUri({ native: 'healtheaty://redirect' }),
   });
 
   useEffect(() => {
     if (response?.type === 'success') {
-      setLoading(false); // Reset loading state
+      setLoading(false);
       const { idToken } = response.authentication!;
       const credential = GoogleAuthProvider.credential(idToken);
       signInWithCredential(auth, credential)
-        .then(userCredential => {
+        .then((userCredential) => {
           console.log('Google Sign-In successful:', userCredential.user.uid);
           navigation.navigate('UserInfo');
         })
-        .catch(error => {
-          console.error('Firebase Sign-In error:', error);
+        .catch((error) => {
+          setLoading(false);
           Alert.alert('Error', `Failed to sign in with Google: ${error.message}`);
         });
     } else if (response?.type === 'error') {
-      setLoading(false); // Reset loading state
-      console.error('Google Auth error:', response.error);
+      setLoading(false);
       Alert.alert('Error', `Google Sign-In failed: ${response.error?.message || 'Unknown error'}`);
     } else if (response?.type === 'dismiss') {
-      setLoading(false); // Reset loading state if user dismisses the auth session
+      setLoading(false);
     }
   }, [response]);
 
-  const handleInputChange = (field: keyof SignInFormData, value: string): void => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleInputChange = (field: keyof SignInFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const { email, password } = formData;
     if (!email.trim() || !password.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -100,141 +110,151 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
     }
     return true;
   };
+    
 
-  const handleSignIn = async (): Promise<void> => {
+  const handleSignIn = async () => {
     if (!validateForm()) return;
     const { email, password } = formData;
     setLoading(true);
-
+    
     try {
-      // Firebase Auth handles password verification automatically
+      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      console.log('Signed in:', user.uid);
-
-      Alert.alert('Success', 'Signed in successfully', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') }
-      ]);
-    } catch (error: any) {
-      console.error('Sign-in error:', error);
-      setLoading(false);
+      const userInfoRef = doc(db, 'userInfo', userCredential.user.uid);
+      const userInfoDoc = await getDoc(userInfoRef);
       
-      let errorMessage = 'Failed to sign in. Please try again.';
-      
-      switch (error.code) {
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email.';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Invalid email address.';
-          break;
-        case 'auth/user-disabled':
-          errorMessage = 'This account has been disabled.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Please try again later.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'No internet connection.';
-          break;
-        default:
-          if (error.message) errorMessage = error.message;
+      console.log('Signed in:', userCredential.user.uid);
+      if (!userInfoDoc.exists()) {
+        navigation.navigate('UserInfo');
+      } else {
+        navigation.navigate('Home');
       }
       
-      Alert.alert('Error', errorMessage);
-      return;
-    }
+    } catch (error: any) {
     
-    setLoading(false);
+      let errorMessage = 'Failed to sign in. Please try again.';
+      switch (error.code) {
+        case 'auth/user-not-found': errorMessage = 'No account found with this email.'; break;
+        case 'auth/invalid-credential': errorMessage = 'Email hoặc mật khẩu không đúng.'; break;
+        case 'auth/too-many-requests': errorMessage = 'Too many failed attempts. Please try again later.'; break;
+        case 'auth/network-request-failed': errorMessage = 'No internet connection.'; break;
+        default: if (error.message) errorMessage = error.message;
+      }
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoogleSignIn = async (): Promise<void> => {
-    if (loading || !request) return; // Prevent multiple calls
-    setLoading(true); // Set loading to true to disable button
+  const handleGoogleSignIn = async () => {
+    if (loading || !request) return;
+    setLoading(true);
     try {
       await promptAsync();
     } catch (error) {
       setLoading(false);
-      console.error('Google Sign-In error:', error);
       Alert.alert('Error', 'Failed to initiate Google Sign-In');
     }
   };
+
   return (
-    <SafeAreaView style={signInStyles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      <View style={signInStyles.header}>
-        <View style={signInStyles.logoContainer}>
-          <Ionicons name="restaurant" size={24} color="#FF6B35" />
-          <Text style={signInStyles.logoText}>Healthy Eating</Text>
-        </View>
-      </View>
-
-      <View style={signInStyles.content}>
-        <Text style={signInStyles.title}>Sign In</Text>
-        <Text style={signInStyles.subtitle}>Add your details to login</Text>
-
-        <View style={signInStyles.formContainer}>
-          <TextInput
-            style={signInStyles.input}
-            placeholder="Your email"
-            placeholderTextColor="#999"
-            value={formData.email}
-            onChangeText={(value) => handleInputChange('email', value)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            editable={!loading}
-          />
-          <TextInput
-            style={signInStyles.input}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            value={formData.password}
-            onChangeText={(value) => handleInputChange('password', value)}
-            secureTextEntry
-            editable={!loading}
-          />
-
-          <TouchableOpacity
-            style={[signInStyles.signInButton, loading && signInStyles.disabledButton]}
-            onPress={handleSignIn}
-            disabled={loading}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <SafeAreaView style={styles.container}>
+          <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+          
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={signInStyles.signInButtonText}>
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Text>
-          </TouchableOpacity>
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <Ionicons name="restaurant" size={24} color="#FF6B35" />
+                <Text style={styles.logoText}>Healtheaty</Text>
+              </View>
+            </View>
 
-          <TouchableOpacity onPress={() => Alert.alert('Coming Soon')}>
-            <Text style={signInStyles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.content}>
+              <Text style={styles.title}>Sign In</Text>
+              <Text style={styles.subtitle}>Add your details to login</Text>
 
-        <View style={signInStyles.signInGoogleContainer}>
-          <Text style={signInStyles.signInGoogleText}>Or Sign In With</Text>
-          <TouchableOpacity
-            style={signInStyles.signInGoogleButton}
-            onPress={handleGoogleSignIn}
-            disabled={loading}
-          >
-            <Ionicons name="logo-google" size={24} color="#FFFFFF" />
-            <Text style={signInStyles.signInGoogleButtonText}>Sign In With Google</Text>
-          </TouchableOpacity>
-        </View>
+              <View style={styles.formContainer}>
+                <TextInput
+                  ref={emailInputRef}
+                  style={styles.input}
+                  placeholder="Your email"
+                  placeholderTextColor="#999"
+                  value={formData.email}
+                  onChangeText={(value) => handleInputChange('email', value)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={true}
+                  showSoftInputOnFocus={true}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordInputRef.current?.focus()}
+                />
+                <TextInput
+                  ref={passwordInputRef}
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor="#999"
+                  value={formData.password}
+                  onChangeText={(value) => handleInputChange('password', value)}
+                  secureTextEntry
+                  editable={true}
+                  showSoftInputOnFocus={true}
+                  returnKeyType="go"
+                  onSubmitEditing={handleSignIn}
+                />
 
-        <View style={signInStyles.footer}>
-          <Text style={signInStyles.footerText}>Don't have an account?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-            <Text style={signInStyles.signUpLink}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={signInStyles.bottomIndicator} />
-    </SafeAreaView>
+                <TouchableOpacity
+                  style={[styles.signInButton, loading && styles.disabledButton]}
+                  onPress={handleSignIn}
+                  disabled={loading}
+                >
+                  <Text style={styles.signInButtonText}>
+                    {loading ? 'Signing in...' : 'Sign In'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+                  <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Chỉ hiển thị phần Google Sign In khi bàn phím không hiện */}
+              {!isKeyboardVisible && (
+                <View style={styles.signInGoogleContainer}>
+                  <Text style={styles.signInGoogleText}>Or Sign In With</Text>
+                  <TouchableOpacity
+                    style={styles.signInGoogleButton}
+                    onPress={handleGoogleSignIn}
+                    disabled={loading}
+                  >
+                    <Ionicons name="logo-google" size={24} color="#FFFFFF" />
+                    <Text style={styles.signInGoogleButtonText}>Sign In With Google</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {!isKeyboardVisible && (
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>Don't have an account?</Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                    <Text style={styles.signUpLink}>Sign Up</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 

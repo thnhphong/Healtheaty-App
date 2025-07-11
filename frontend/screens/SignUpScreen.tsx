@@ -5,11 +5,11 @@ import {
   SafeAreaView, Alert, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { signUpStyles } from '../styles/SignUpScreenStyles';
+import { styles } from '../styles/SignUpScreenStyles';
 import { NavigationProp } from '@react-navigation/native';
 import { collection, getDocs, query, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../backend/config/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -85,8 +85,17 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
       }
 
       // Create Firebase Auth user - Firebase handles password hashing securely
+      const auth = getAuth();
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // send verification email 
+      await sendEmailVerification(user);
+      Alert.alert(
+        'Verify Your Email',
+        'A verification link has been sent to your inbox. Please verify before signing in.',
+        [{ text: 'OK' }]
+      )
 
       // Save additional user data in Firestore (NO PASSWORD - Firebase Auth handles this)
       await setDoc(doc(db, 'user', user.uid), {
@@ -94,12 +103,14 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         fullName: fullName,
         phone,
         createdAt: serverTimestamp()
-        // Don't store password - Firebase Auth handles this securely
       });
+
+      //sign out the user so they have to log in again after verifying
+      await auth.signOut()
 
       setLoading(false);
       Alert.alert('Sign Up Successful!', 'Your account has been created.', [
-        { text: 'OK', onPress: () => navigation.navigate('UserInfo') }
+        { text: 'OK', onPress: () => navigation.navigate('SignIn') }
       ]);
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -128,23 +139,23 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={signUpStyles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      <View style={signUpStyles.header}>
-        <View style={signUpStyles.logoContainer}>
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
           <Ionicons name="restaurant" size={24} color="#FF6B35" />
-          <Text style={signUpStyles.logoText}>Healthy Eating</Text>
+          <Text style={styles.logoText}>Healtheaty</Text>
         </View>
       </View>
 
-      <ScrollView style={signUpStyles.content} showsVerticalScrollIndicator={false}>
-        <Text style={signUpStyles.title}>Sign Up</Text>
-        <Text style={signUpStyles.subtitle}>Add your details to register</Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Sign Up</Text>
+        <Text style={styles.subtitle}>Add your details to register</Text>
 
-        <View style={signUpStyles.formContainer}>
+        <View style={styles.formContainer}>
           <TextInput 
-            style={signUpStyles.input} 
+            style={styles.input} 
             placeholder="Name" 
             placeholderTextColor="#999"
             value={formData.fullName} 
@@ -152,7 +163,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             editable={!loading} 
           />
           <TextInput 
-            style={signUpStyles.input} 
+            style={styles.input} 
             placeholder="Email" 
             placeholderTextColor="#999"
             value={formData.email} 
@@ -162,7 +173,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             editable={!loading} 
           />
           <TextInput 
-            style={signUpStyles.input} 
+            style={styles.input} 
             placeholder="Mobile No" 
             placeholderTextColor="#999"
             value={formData.phone} 
@@ -171,7 +182,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             editable={!loading} 
           />
           <TextInput 
-            style={signUpStyles.input} 
+            style={styles.input} 
             placeholder="Password" 
             placeholderTextColor="#999"
             value={formData.password} 
@@ -180,7 +191,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             editable={!loading} 
           />
           <TextInput 
-            style={signUpStyles.input} 
+            style={styles.input} 
             placeholder="Confirm password" 
             placeholderTextColor="#999"
             value={formData.confirmPassword} 
@@ -190,25 +201,24 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           />
 
           <TouchableOpacity 
-            style={[signUpStyles.signUpButton, loading && { opacity: 0.7 }]} 
+            style={[styles.signUpButton, loading && { opacity: 0.7 }]} 
             onPress={handleSignUp} 
             disabled={loading}
           >
-            <Text style={signUpStyles.signUpButtonText}>
+            <Text style={styles.signUpButtonText}>
               {loading ? 'Creating account...' : 'Create an account'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={signUpStyles.footer}>
-          <Text style={signUpStyles.footerText}>Already have an Account? </Text>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Already have an Account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignIn')} disabled={loading}>
-            <Text style={signUpStyles.signInLink}>Sign In</Text>
+            <Text style={styles.signInLink}>Sign In</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      <View style={signUpStyles.bottomIndicator} />
     </SafeAreaView>
   );
 };

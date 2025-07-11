@@ -11,6 +11,8 @@ import UserInfoScreen from '../screens/UserInfoScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import ForgotPassword from '../components/ui/ForgotPassword';
+import ScanFoodScreen from '../screens/ScanFoodScreen';
 
 const Stack = createStackNavigator();
 
@@ -27,9 +29,19 @@ const AppNavigator = () => {
         <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="UserInfo" component={UserInfoScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen
+  name="Home"
+  component={HomeScreen}
+  options={{
+    gestureEnabled: false,
+  }}
+/>
+
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} /> 
+        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+        <Stack.Screen name="ScanFood" component={ScanFoodScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

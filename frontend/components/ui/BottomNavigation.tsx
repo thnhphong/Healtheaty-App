@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Home, Calendar, ScanLine, Clock, User } from 'lucide-react-native'; 
+import { NavigationProp } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 
-const BottomNavigation = () => {
+// Inside props
+interface BottomNavigationProps {
+  navigation: NavigationProp<any>;
+}
+
+const BottomNavigation: React.FC<BottomNavigationProps> = ({ navigation }) => {
+  // ✅ Đúng - hook được khai báo bên trong component
+  const route = useRoute();
   const [activeTab, setActiveTab] = useState('Home');
 
   const tabs = [
@@ -15,6 +24,11 @@ const BottomNavigation = () => {
 
   const handleTabPress = (tabName: string) => {
     setActiveTab(tabName);
+    if (tabName === 'Scan') {
+      navigation.navigate('ScanFood');
+    } else {
+      navigation.navigate(tabName);
+    }
   };
 
   return (
@@ -22,7 +36,7 @@ const BottomNavigation = () => {
       <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = activeTab === tab.name;
+          const isActive = route.name === tab.name;
 
           return (
             <TouchableOpacity

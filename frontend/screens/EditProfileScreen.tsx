@@ -14,18 +14,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/EditProfileStyles';
-// Firebase imports
+
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../../backend/config/firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-//image picker
+
 import * as ImagePicker from 'expo-image-picker';
-//change password
+
 import { getAuth, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 
-//calculateCalories 
+
 import { calculateBMR, calculateTDEE } from '../utils/calculateCalories';
-//uploadImageToCloudinary
+
 import { uploadImageToCloudinary } from '../utils/uploadImageToCloudinary';
 
 type RootStackParamList = {
@@ -70,17 +70,18 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   const [imageChanged, setImageChanged] = useState<boolean>(false);
   const [showPicker, setShowPicker] = useState(false);
   const [showActivityPicker, setShowActivityPicker] = useState(false);
-    // Activity factor options with descriptions
+   
   const activityFactorOptions = [
-    { value: 1, label: 'Sedentary (little/no exercise)' },
-    { value: 2, label: 'Light activity (1-3 days/week)' },
-    { value: 3, label: 'Moderate activity (3-5 days/week)' },
-    { value: 4, label: 'Very active (6-7 days/week)' },
-    { value: 5, label: 'Extremely active (2 times/day)' }
-  ];
+  { value: 1, label: 'Sedentary (little/no exercise)', description: 'Little to no exercise' },
+  { value: 2, label: 'Light activity (1-3 days/week)', description: 'Light workouts' },
+  { value: 3, label: 'Moderate activity (3-5 days/week)', description: 'Moderate exercise' },
+  { value: 4, label: 'Very active (6-7 days/week)', description: 'Daily intense activity' },
+  { value: 5, label: 'Extremely active (2 times/day)', description: 'Heavy training' },
+];
+
   const [isLoading, setIsLoading] = useState(false);
 
-  //change password state 
+  
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -94,10 +95,10 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
 
   const requestPermissions = async () => {
     try {
-      // Request media library permissions
+      
       const mediaLibraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
-      // Request camera permissions
+      
       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
       
       if (mediaLibraryStatus.status !== 'granted') {
@@ -178,7 +179,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
 
   const pickImage = async () => {
     try {
-      // Show action sheet to choose between camera and library
+     
       Alert.alert(
         'Select Image',
         'Choose an option',
@@ -242,7 +243,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
       return;
     }
 
-    // Basic validation
+   
     if (!userData.fullName?.trim()) {
       Alert.alert('Error', 'Please enter your full name');
       return;
@@ -257,7 +258,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
     try {
       let uploadedImageUrl = userInfo.avatarUrl;
 
-      // Upload image if it was changed
+     
       if (imageChanged && image) {
         console.log('Uploading new image...');
         const uploaded = await uploadImageToCloudinary(image);
@@ -269,18 +270,18 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         }
       }
 
-      //calculate BMR and TDEE
+     
       const bmr = calculateBMR(userInfo.gender, userInfo.weight, userInfo.height, userInfo.age);
       const tdee = calculateTDEE(bmr, userInfo.activityFactor);
 
-      // Update user data
+      
       const userDocRef = doc(db, 'user', user.uid);
       await updateDoc(userDocRef, {
         fullName: userData.fullName.trim(),
         email: userData.email,
       });
 
-      // Update user info
+      
       const userInfoRef = doc(db, 'userInfo', user.uid);
       await updateDoc(userInfoRef, {
         age: userInfo.age,
@@ -294,7 +295,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         updatedAt: new Date().toISOString(),
       });
 
-      // Reset image changed flag
+     
       setImageChanged(false);
       
       Alert.alert('Success', 'Profile updated successfully!');
@@ -328,9 +329,9 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   
     try {
       const credential = EmailAuthProvider.credential(user.email, currentPassword);
-      await reauthenticateWithCredential(user, credential); // must reauth before updating password
+      await reauthenticateWithCredential(user, credential); 
   
-      await updatePassword(user, newPassword); // actual password update
+      await updatePassword(user, newPassword); 
       Alert.alert('Success', 'Password changed successfully');
       setShowPasswordForm(false); 
     } catch (error: any) {
@@ -453,7 +454,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         />
 
 
-    // Replace the TextInput with this custom picker
+    
     <Text style={styles.label}>Activity Factor</Text>
     <TouchableOpacity 
       style={styles.activityButton} 
@@ -531,7 +532,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         </View>
       </Modal>
     )}
-    //password change 
+   
             <TouchableOpacity
       style={styles.menuItem}
       onPress={() => setShowPasswordForm(!showPasswordForm)}
@@ -540,7 +541,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
       <Text style={styles.menuText}>Change Password</Text>
     </TouchableOpacity>
 
-    // Password Change Form
+    
     {showPasswordForm && (
     <View style={{ paddingVertical: 10 }}>
       <Text style={styles.label}>Current Password</Text>

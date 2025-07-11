@@ -1,7 +1,7 @@
 // frontend/styles/WelcomeScreenStyles.ts
 import { StyleSheet } from 'react-native';
 
-export const welcomeStyles = StyleSheet.create({
+export const welcomeStyles  = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FF6B35',

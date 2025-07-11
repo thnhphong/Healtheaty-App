@@ -144,13 +144,8 @@ export const styles = StyleSheet.create({
   gridInputGroup: {
     marginBottom: 0,
   },
-
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#495057',
-    marginBottom: 8,
-  },
+  
+  
 
   requiredLabel: {
     fontSize: 16,
@@ -350,7 +345,7 @@ export const styles = StyleSheet.create({
   },
 
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF6B35',
     borderRadius: 100,
     paddingVertical: 16,
     alignItems: 'center',
@@ -364,13 +359,8 @@ export const styles = StyleSheet.create({
   },
 
   saveButtonPressed: {
-    backgroundColor: '#0056b3',
+    backgroundColor: '#FF6C35',
     transform: [{ scale: 0.98 }],
-  },
-
-  saveButtonDisabled: {
-    backgroundColor: '#6c757d',
-    shadowOpacity: 0.1,
   },
 
   saveButtonText: {
@@ -485,4 +475,39 @@ export const styles = StyleSheet.create({
   selectedOptionDescText: {
     color: '#0056b3',
   },
+  // Thêm vào EditProfileStyles.ts
+successModalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+successModalContent: {
+  backgroundColor: 'white',
+  borderRadius: 20,
+  padding: 20,
+  alignItems: 'center',
+  minWidth: 250,
+  minHeight: 200,
+},
+successAnimation: {
+  width: 120,
+  height: 120,
+},
+successText: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#333',
+  textAlign: 'center',
+  marginTop: 10,
+},
+changePhoto: {
+  marginTop: 10,
+  fontSize: 14,
+  color: '#888'
+},
+disabled: {
+  opacity: 0.5
+}
+
 });

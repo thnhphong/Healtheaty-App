@@ -31,7 +31,7 @@ type RootStackParamList = {
   EditProfile: undefined;
 };
 
-// Fixed: Correct prop type definition
+
 type HomeScreenProps = {
   navigation: NavigationProp<RootStackParamList, 'Home'>;
 };
@@ -75,7 +75,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Normalize gender 
   const normalizedGender = (gender: string): 'male' | 'female' | null => {
     if(!gender) return null;
-    const g = gender.toLocaleLowerCase()
+    const g = gender.toLowerCase(); // Fixed: toLocaleLowerCase -> toLowerCase
     if(g === 'male' || g === 'female') return g;
     return null;
   }
@@ -100,20 +100,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   
       const userInfoData = userInfoDoc.data() as UserInfo;
   
+      // Fixed: Declare userDataFromDoc variable properly
+      let userDataFromDoc: UserData = { fullName: 'User' };
+      
       const userDocRef = doc(db, 'user', user.uid);
       const userDoc = await getDoc(userDocRef);
       if(userDoc.exists()){
-        const userData = userDoc.data()
-        setUserData({
-          fullName: userData.fullName,
-          email: userData.email
-        });
-      }else{
-        setUserData({
-          fullName: 'User',
-          email: ''
-        });
+        const userData = userDoc.data();
+        userDataFromDoc = {
+          fullName: userData.fullName || 'User'
+        };
       }
+      
+      // Set user data first
+      setUserData(userDataFromDoc);
         
       const gender = normalizedGender(userInfoData.gender);
   
@@ -124,8 +124,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         typeof userInfoData.weight === 'number' &&
         typeof userInfoData.activityFactor === 'number' &&
         typeof userInfoData.bmr === 'number' &&
-        typeof userInfoData.tdee === 'number' &&
-        typeof userInfoData.avatarUrl === 'string' 
+        typeof userInfoData.tdee === 'number'
       ) {
         setUserInfo({
           gender,
@@ -138,7 +137,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           avatarUrl: userInfoData.avatarUrl || '', 
         });
   
-        const consumed = 900; // placeholder
+        const consumed = 900; 
   
         setCalorieData({
           bmr: userInfoData.bmr,
@@ -147,12 +146,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           remaining: userInfoData.tdee - consumed,
         });
   
-        setUserData({ fullName: userData.fullName || 'User' });
+        // Fixed: Remove duplicate setUserData call
       } else {
         Alert.alert('Invalid user data', 'Please complete your profile information.');
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+      Alert.alert('Error', 'Failed to load user data. Please try again.');
     }
   };
   
@@ -197,9 +197,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>
           Hi {userData?.fullName?.split(' ')[0] || 'User'}
         </Text>
@@ -292,7 +289,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
       </ScrollView>
        {/* Bottom Navigation */}
-       <BottomNavigation />
+       <BottomNavigation navigation={navigation} />
     </SafeAreaView>
   );
 };

@@ -2,12 +2,15 @@
   "expo": {
     "name": "Healtheaty",
     "slug": "healtheaty",
-    "scheme": "healtheaty", 
+    "scheme": "healtheaty",
     "version": "1.0.0",
     "entryPoint": "./index.js",
-    "owner": "phong101204",
+    "owner": "ltrungkien20",
     "android": {
-      "package": "com.anonymous.healtheaty"
+      "package": "com.anonymous.healtheaty",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.anonymous.healtheaty"
@@ -17,7 +20,7 @@
         "@react-native-google-signin/google-signin",
         {
           "iosClientId": "974622630670-rouo2bolqc1jdph7k4kdrjpjoskdhqqu.apps.googleusercontent.com",
-          "iosUrlScheme": "com.googleusercontent.apps.974622630670-rouo2bolqc1jdph7k4kdrjpjoskdhqqu", 
+          "iosUrlScheme": "com.googleusercontent.apps.974622630670-rouo2bolqc1jdph7k4kdrjpjoskdhqqu",
           "webClientId": "974622630670-l66g0ku545r5n5kpka9jf1g6f6o1j2f0.apps.googleusercontent.com",
           "androidClientId": "974622630670-uqmjojaas67v1qb1fq1h3s9f7dli732m.apps.googleusercontent.com"
         }
@@ -30,6 +33,12 @@
         }
       ],
       "expo-web-browser"
-    ]
+      
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "570f9ec7-e8f9-411e-91ef-47ab000c0412"
+      }
+    }
   }
 }

@@ -1,5 +1,7 @@
 // frontend/screens/ProfileScreen.tsx
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+
 import {
   View,
   Text,
@@ -15,9 +17,8 @@ import { styles } from '../styles/ProfileScreenStyles';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../backend/config/firebase';
 import { auth } from '../../backend/config/firebase';
-import BottomNavigation from '../components/ui/BottomNavigation';
-//bottom navigation
 
+import BottomNavigation from '../components/ui/BottomNavigation';
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -29,7 +30,6 @@ type RootStackParamList = {
   EditProfile: undefined;
 };
 
-// Fixed: Correct prop type definition
 type ProfileScreenProps = {
   navigation: NavigationProp<RootStackParamList, 'Profile'>;
 };
@@ -50,44 +50,49 @@ interface UserInfo {
   avatarUrl?: string;
 }
 
-// Removed duplicate HomeScreenProps interface - not needed here
-
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
+  // ✅ Đúng - hook được khai báo bên trong component
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   let avatarUrl = userInfo?.avatarUrl;
 
-  useEffect(() => {
-    loadUserData();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadUserData();
+    }, [])
+  );
 
   const loadUserData = async () => {
+    setIsLoading(true);
     const user = auth.currentUser;
-  if (!user) {
-    console.log('User not looged in');
-    return;
-  }
-  try{
-    const userDocRef = doc(db, 'user', user.uid)
-    const userDoc = await getDoc(userDocRef);
-
-    //userInfo
-    const userInfoDocRef = doc(db, 'userInfo', user.uid)
-    const userInfoDoc = await getDoc(userInfoDocRef);
-
-    if (userDoc.exists()) {
-      const userData = userDoc.data() as UserData;
-      const userInfo = userInfoDoc.data() as UserInfo;
-      setUserData(userData);
-      setUserInfo(userInfo);
-    }else{
-      console.log('No user data found');
+    if (!user) {
+      console.log('User not logged in');
+      setIsLoading(false);
+      return;
     }
-  }
-  catch (error) {
-    console.error('Error loading user data:', error);
-  }
+    
+    try {
+      const userDocRef = doc(db, 'user', user.uid);
+      const userDoc = await getDoc(userDocRef);
 
+      const userInfoDocRef = doc(db, 'userInfo', user.uid);
+      const userInfoDoc = await getDoc(userInfoDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as UserData;
+        const userInfo = userInfoDoc.data() as UserInfo;
+        setUserData(userData);
+        setUserInfo(userInfo);
+      } else {
+        console.log('No user data found');
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -135,11 +140,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   const getBMIStatus = (bmi: number): { text: string; color: string } => {
-    if (bmi < 18.5) return { text: 'Uderweight', color: '#3498db' };
+    if (bmi < 18.5) return { text: 'Underweight', color: '#3498db' };
     if (bmi < 25) return { text: 'Normal', color: '#27ae60' };
     if (bmi < 30) return { text: 'Overweight', color: '#f39c12' };
     return { text: 'Obese', color: 'red' };
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -155,11 +170,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Profile Info */}
+        
         <View style={styles.profileSection}>
-          //avatar 
+          {/* Avatar */}
           <View style={styles.avatarContainer}>
-            //check if userInfo has avatarUrl
+            {/* Check if userInfo has avatarUrl */}
             {userInfo?.avatarUrl ? (
               <Image source={{ uri: userInfo.avatarUrl }} style={styles.avartar} />
             ) : (
@@ -177,7 +192,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Stats Section */}
+       
         {userInfo && (
           <View style={styles.statsSection}>
             <Text style={styles.sectionTitle}>Health Information</Text>
@@ -260,7 +275,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      <BottomNavigation />
+      <BottomNavigation navigation={navigation} />
     </SafeAreaView>
   );
 };

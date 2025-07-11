@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { NavigationProp } from '@react-navigation/native';
-import { userInfoStyles } from '../styles/UserInfoScreenStyles';
+import { styles } from '../styles/UserInfoScreenStyles';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../backend/config/firebase';
 
@@ -184,15 +184,15 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={userInfoStyles.container}>
-      <ScrollView style={userInfoStyles.content} showsVerticalScrollIndicator={false}>
-        <Text style={userInfoStyles.title}>Personal Information</Text>
-        <Text style={userInfoStyles.subtitle}>Enter your information to calculate appropriate calories</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Personal Information</Text>
+        <Text style={styles.subtitle}>Enter your information to calculate appropriate calories</Text>
 
-        <View style={userInfoStyles.formContainer}>
-          <Text style={userInfoStyles.label}>Age</Text>
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>Age</Text>
           <TextInput
-            style={userInfoStyles.input}
+            style={styles.input}
             placeholder="Enter your age"
             placeholderTextColor="#999"
             value={userInfo.age}
@@ -200,21 +200,21 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
             keyboardType="numeric"
           />
 
-          <Text style={userInfoStyles.label}>Gender</Text>
-          <View style={userInfoStyles.pickerContainer}>
+          <Text style={styles.label}>Gender</Text>
+          <View style={styles.pickerContainer}>
             <Picker
               selectedValue={userInfo.gender}
               onValueChange={(value) => handleInputChange('gender', value)}
-              style={userInfoStyles.picker}
+              style={styles.picker}
             >
               <Picker.Item label="Male" value="male" />
               <Picker.Item label="Female" value="female" />
             </Picker>
           </View>
 
-          <Text style={userInfoStyles.label}>Height (cm)</Text>
+          <Text style={styles.label}>Height (cm)</Text>
           <TextInput
-            style={userInfoStyles.input}
+            style={styles.input}
             placeholder="Enter your height"
             placeholderTextColor="#999"
             value={userInfo.height}
@@ -222,9 +222,9 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
             keyboardType="numeric"
           />
 
-          <Text style={userInfoStyles.label}>Weight (kg)</Text>
+          <Text style={styles.label}>Weight (kg)</Text>
           <TextInput
-            style={userInfoStyles.input}
+            style={styles.input}
             placeholder="Enter your weight"
             placeholderTextColor="#999"
             value={userInfo.weight}
@@ -232,12 +232,12 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
             keyboardType="numeric"
           />
 
-          <Text style={userInfoStyles.label}>Activity Level</Text>
-          <View style={userInfoStyles.pickerContainer}>
+          <Text style={styles.label}>Activity Level</Text>
+          <View style={styles.pickerContainer}>
             <Picker
               selectedValue={userInfo.activityFactor}
               onValueChange={(value) => handleInputChange('activityFactor', value)}
-              style={userInfoStyles.picker}
+              style={styles.picker}
             >
               {activityLevels.map((level) => (
                 <Picker.Item
@@ -250,11 +250,11 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
           </View>
 
           <TouchableOpacity 
-            style={[userInfoStyles.submitButton, loading && userInfoStyles.disabledButton]}
+            style={[styles.submitButton, loading && styles.disabledButton]}
             onPress={handleSubmit}
             disabled={loading}
           >
-            <Text style={userInfoStyles.submitButtonText}>
+            <Text style={styles.submitButtonText}>
               {loading ? 'Saving...' : 'Save Information'}
             </Text>
           </TouchableOpacity>
