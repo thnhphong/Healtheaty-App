@@ -1,0 +1,24 @@
+# User authentication table keyed by Firebase Auth UID
+type User @table {
+  id: String! @default(expr: "auth.uid")
+  email: String!
+  name: String!
+  password: String!
+  phone: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# User profile information table
+type UserInfo @table {
+  id: UUID! @default(expr: "uuidV4()")
+  userId: String! # References User.id (Firebase Auth UID)
+  activityFactor: String # e.g., "moderate", "high", "low"
+  age: Int
+  gender: String # e.g., "male", "female", "other"
+  height: Int # in cm
+  weight: Int # in kg
+  createdAt: Timestamp! @default(expr: "request.time")
+  
+  # Optional: Add relationship to User table
+  # user: User! @ref(fields: ["user_id"], references: ["id"])
+}
