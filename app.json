@@ -5,7 +5,7 @@
     "scheme": "healtheaty",
     "version": "1.0.0",
     "entryPoint": "./index.js",
-    "owner": "ltrungkien20",
+    "owner": "hungphatbui",
     "android": {
       "package": "com.anonymous.healtheaty",
       "permissions": [
