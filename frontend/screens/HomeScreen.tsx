@@ -29,6 +29,8 @@ type RootStackParamList = {
   Home: undefined;
   Profile: undefined;
   EditProfile: undefined;
+  Help: undefined;
+  About: undefined;
 };
 
 
