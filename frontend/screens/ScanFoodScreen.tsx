@@ -88,12 +88,12 @@ export default function ScanFoodScreen() {
     requestCameraPermission();
   }, [permission, requestPermission]);
 
-  // Handle camera ready state
+  
   const onCameraReady = useCallback(() => {
     setCameraReady(true);
   }, []);
 
-  // Fetch product data from OpenFoodFacts API
+  
   const fetchProductData = async (barcode: string): Promise<ScannedProduct | null> => {
     try {
       const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
@@ -147,17 +147,17 @@ export default function ScanFoodScreen() {
         dateAdded: new Date().toISOString(),
       };
 
-      // Save to scanned products collection
+    
       await addDoc(collection(db, 'scannedProducts'), productData);
 
-      // Optionally, save to user's food diary for today
+      
       const today = new Date().toISOString().split('T')[0];
       const diaryRef = doc(db, 'foodDiary', `${user.uid}_${today}`);
       
       await setDoc(diaryRef, {
         userId: user.uid,
         date: today,
-        foods: [productData], // You might want to merge with existing foods
+        foods: [productData], 
       }, { merge: true });
 
       Alert.alert('Success', 'Product saved successfully!');
@@ -167,7 +167,7 @@ export default function ScanFoodScreen() {
     }
   };
 
-  // Handle barcode scan
+  
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (isScanning) return;
     
