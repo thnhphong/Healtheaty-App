@@ -29,6 +29,8 @@ type RootStackParamList = {
   Home: undefined;
   Profile: undefined;
   EditProfile: undefined;
+  Help: undefined;
+  About: undefined;
 };
 
 
@@ -156,21 +158,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   };
   
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
   const getCurrentDate = (): string => {
     const date = new Date();
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
-    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+    return `${months[currentMonth]} ${currentYear}`;
   };
 
   const getDaysInMonth = (): (number | null)[] => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     
     const days: (number | null)[] = [];
     
@@ -185,6 +187,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
     
     return days;
+  };
+
+  const gotoPreviousMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  }
+
+  const gotoNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
   };
 
   const isToday = (day: number | null): boolean => {
@@ -232,11 +252,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         {/* Calendar */}
         <View style={styles.calendarContainer}>
           <View style={styles.calendarHeader}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={gotoPreviousMonth}>
               <Ionicons name="chevron-back" size={24} color="#666" />
             </TouchableOpacity>
             <Text style={styles.calendarTitle}>{getCurrentDate()}</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={gotoNextMonth}>
               <Ionicons name="chevron-forward" size={24} color="#666" />
             </TouchableOpacity>
           </View>

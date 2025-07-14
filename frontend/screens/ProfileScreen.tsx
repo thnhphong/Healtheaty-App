@@ -28,6 +28,8 @@ type RootStackParamList = {
   Home: undefined;
   Profile: undefined;
   EditProfile: undefined;
+  Help: undefined;
+  About: undefined
 };
 
 type ProfileScreenProps = {
@@ -255,13 +257,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Help')}>
             <Ionicons name="help-circle" size={24} color="#FF6B35" />
             <Text style={styles.menuText}>Help</Text>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('About')}>
             <Ionicons name="information-circle" size={24} color="#FF6B35" />
             <Text style={styles.menuText}>About</Text>
             <Ionicons name="chevron-forward" size={20} color="#666" />
