@@ -13,6 +13,7 @@ import { welcomeStyles } from '../styles/WelcomeScreenStyles';
 import SignInBtn from '../components/ui/SignInBtn';
 import SignUpBtn from '../components/ui/SignUpBtn';
 import Logo from '../screens/Logo';
+import TypingEffectText from '../components/ui/TypingEffectText';
 
 // Define your root stack param list
 type RootStackParamList = {
@@ -55,16 +56,21 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
         </View>
         
         <Text style={welcomeStyles.title}>
-          <Text style={welcomeStyles.healthyText}>Healthy</Text>
+          <Text style={welcomeStyles.healthyText}>Healthily</Text>
           {'\n'}
           <Text style={welcomeStyles.eatingText}>Eating Made</Text>
           {'\n'}
           <Text style={welcomeStyles.betterText}>Better</Text>
         </Text>
         
-        <Text style={welcomeStyles.subtitle}>
-          Start your journey to a healthier lifestyle
-        </Text>
+          <TypingEffectText
+          text="Start your journey to a healthier lifestyle"
+          style={{ color: 'white', 
+            fontStyle: 'italic',
+            fontWeight: 700,
+          }}
+        />
+
       </View>
 
       {/* Buttons */}

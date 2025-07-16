@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { db } from '../../backend/config/firebase';
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { styles } from '../styles/ScanFoodScreen';
+import AnimatedNutritionValue from '../components/ui/AnimatedNutritionValue';
 
 // Types
 interface OpenFoodFactsProduct {
@@ -225,25 +227,30 @@ export default function ScanFoodScreen() {
   }, [cameraReady]);
 
   // Pick image from library
-  const pickImageFromLibrary = async () => {
+  const openImageLibrary = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'images',
         allowsEditing: true,
-        quality: 0.8,
-        aspect: [4, 3],
+        aspect: [1, 1],
+        quality: 0.7,
       });
 
-      if (!result.canceled && result.assets[0]) {
-        setImageUri(result.assets[0].uri);
-        console.log('Image selected:', result.assets[0].uri);
-      }
+      handleImageResult(result);
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert("Error", "Failed to pick image from library.");
+      console.error('Error opening image library:', error);
+      Alert.alert('Error', 'Failed to open image library');
     }
   };
 
+  // Helper function to handle image result
+  const handleImageResult = (result) => {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedImage = result.assets[0];
+      setImageUri(selectedImage.uri);
+      console.log('Image selected:', selectedImage.uri);
+    }
+  };
   // Reset to camera view
   const resetCamera = () => {
     setImageUri(null);
@@ -336,7 +343,7 @@ export default function ScanFoodScreen() {
                 
                 <TouchableOpacity 
                   style={styles.libraryButton} 
-                  onPress={pickImageFromLibrary}
+                  onPress={openImageLibrary}
                 >
                   <Ionicons name="image-outline" size={28} color="white" />
                 </TouchableOpacity>
@@ -474,36 +481,26 @@ export default function ScanFoodScreen() {
                   )}
 
                   {/* Nutrition Facts */}
-                  <View style={styles.nutritionSection}>
-                    <Text style={styles.sectionTitle}>Nutrition Facts (per 100g)</Text>
-                    <View style={styles.nutritionGrid}>
-                      <View style={styles.nutritionItem}>
-                        <Text style={styles.nutritionLabel}>Calories</Text>
-                        <Text style={styles.nutritionValue}>{scannedProduct.calories} kcal</Text>
-                      </View>
-                      <View style={styles.nutritionItem}>
-                        <Text style={styles.nutritionLabel}>Fat</Text>
-                        <Text style={styles.nutritionValue}>{scannedProduct.nutrients.fat}g</Text>
-                      </View>
-                      <View style={styles.nutritionItem}>
-                        <Text style={styles.nutritionLabel}>Carbs</Text>
-                        <Text style={styles.nutritionValue}>{scannedProduct.nutrients.carbs}g</Text>
-                      </View>
-                      <View style={styles.nutritionItem}>
-                        <Text style={styles.nutritionLabel}>Protein</Text>
-                        <Text style={styles.nutritionValue}>{scannedProduct.nutrients.protein}g</Text>
-                      </View>
-                      <View style={styles.nutritionItem}>
-                        <Text style={styles.nutritionLabel}>Sugar</Text>
-                        <Text style={styles.nutritionValue}>{scannedProduct.nutrients.sugar}g</Text>
-                      </View>
-                      <View style={styles.nutritionItem}>
-                        <Text style={styles.nutritionLabel}>Fiber</Text>
-                        <Text style={styles.nutritionValue}>{scannedProduct.nutrients.fiber}g</Text>
-                      </View>
-                    </View>
-                  </View>
-
+                {/* Nutrition Facts */}
+              <View style={styles.nutritionSection}>
+              <Text style={styles.sectionTitle}>Nutrition Facts (per 100g)</Text>
+              <View style={styles.nutritionGrid}>
+                {[
+                { label: 'Calories', rawValue: parseFloat(scannedProduct.calories) || 0, icon: 'flame', suffix: ' kcal' },
+                { label: 'Fat', rawValue: parseFloat(scannedProduct.nutrients.fat) || 0, icon: 'pizza', suffix: 'g' },
+                { label: 'Carbs', rawValue: parseFloat(scannedProduct.nutrients.carbs) || 0, icon: 'leaf', suffix: 'g' },
+                { label: 'Protein', rawValue: parseFloat(scannedProduct.nutrients.protein) || 0, icon: 'fitness', suffix: 'g' },
+                { label: 'Sugar', rawValue: parseFloat(scannedProduct.nutrients.sugar) || 0, icon: 'ice-cream', suffix: 'g' },
+                { label: 'Fiber', rawValue: parseFloat(scannedProduct.nutrients.fiber) || 0, icon: 'barbell', suffix: 'g' },
+              ].map((item, index) => (
+                <View key={index} style={styles.nutritionItemCard}>
+                  <Ionicons name={item.icon} size={24} color="#4CAF50" style={styles.nutritionIcon} />
+                  <Text style={styles.nutritionLabel}>{item.label}</Text>
+                  <AnimatedNutritionValue value={item.rawValue} suffix={item.suffix} duration={2000} />
+                </View>
+              ))}
+              </View>
+                </View>
                   {/* Ingredients */}
                   {scannedProduct.ingredients && (
                     <View style={styles.ingredientsSection}>
@@ -544,361 +541,3 @@ const getNutriScoreColor = (grade: string): string => {
     default: return '#999';
   }
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  camera: {
-    flex: 1,
-  },
-  cameraOverlay: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  topControls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
-    paddingTop: 60,
-  },
-  modeButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 25,
-    padding: 12,
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  modeButtonText: {
-    color: 'white',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  libraryButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 25,
-    padding: 12,
-  },
-  scanningFrame: {
-    alignSelf: 'center',
-    width: 250,
-    height: 250,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  corner: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    borderColor: '#00ff00',
-    borderWidth: 3,
-    top: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-  },
-  cornerTopRight: {
-    top: 0,
-    right: 0,
-    left: 'auto',
-    borderLeftWidth: 0,
-    borderRightWidth: 3,
-    borderBottomWidth: 0,
-  },
-  cornerBottomLeft: {
-    bottom: 0,
-    left: 0,
-    top: 'auto',
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomWidth: 3,
-  },
-  cornerBottomRight: {
-    bottom: 0,
-    right: 0,
-    top: 'auto',
-    left: 'auto',
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderRightWidth: 3,
-    borderBottomWidth: 3,
-  },
-  scanningText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    textAlign: 'center',
-  },
-  bottomControls: {
-    alignItems: 'center',
-    paddingBottom: 50,
-  },
-  captureButton: {
-    backgroundColor: '#007AFF',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  captureButtonDisabled: {
-    backgroundColor: '#666',
-  },
-  barcodeInstructions: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  barcodeInstructionsText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  previewImage: {
-    flex: 1,
-    width: '100%',
-  },
-  previewOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  backButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 25,
-    padding: 12,
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  resultCard: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  foodInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  foodImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    marginRight: 16,
-  },
-  foodInfo: {
-    flex: 1,
-  },
-  resultText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
-  },
-  resultSubtext: {
-    color: '#666',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  analyzeButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  analyzeButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  analyzeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 20,
-  },
-  permissionText: {
-    fontSize: 18,
-    color: '#333',
-    marginVertical: 20,
-    textAlign: 'center',
-  },
-  permissionButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-  },
-  permissionButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  productImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  placeholderImage: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  productInfo: {
-    marginBottom: 20,
-  },
-  productName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  productBrand: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 4,
-  },
-  productBarcode: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 16,
-  },
-  nutriScoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  nutriScoreLabel: {
-    fontSize: 16,
-    color: '#333',
-  },
-  nutriScoreBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  nutriScoreText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  nutritionSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  nutritionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  nutritionItem: {
-    width: '48%',
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  nutritionLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  nutritionValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  ingredientsSection: {
-    marginBottom: 20,
-  },
-  ingredientsText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

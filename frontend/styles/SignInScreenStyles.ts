@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native';
+import Colors from '../constants/Colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -51,20 +52,22 @@ export const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderRadius: 50,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     fontSize: 16,
     color: '#333333',
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    color: Colors.primaryInputText,
+    backgroundColor: Colors.primaryInput,
   },
   signInButton: {
     backgroundColor: '#FF6B35',
-    borderRadius: 8,
-    paddingVertical: 16,
+    borderRadius: 50,
+    paddingVertical: 20,
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 12,
+    marginBottom: 12,
     shadowColor: '#FF6B35',
     shadowOffset: {
       width: 0,
@@ -88,7 +91,6 @@ export const styles = StyleSheet.create({
     color: '#FF6B35',
     fontSize: 14,
     textAlign: 'center',
-    textDecorationLine: 'underline',
   },
   signInGoogleContainer: {
     marginBottom: 30,
@@ -97,14 +99,14 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   signInGoogleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#4285F4',
-    borderRadius: 8,
+    borderRadius: 50,
     paddingVertical: 12,
     paddingHorizontal: 16,
     shadowColor: '#4285F4',
@@ -137,6 +139,5 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FF6B35',
     fontWeight: 'bold',
-    textDecorationLine: 'underline',
   },
 });

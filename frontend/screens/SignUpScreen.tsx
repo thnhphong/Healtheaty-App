@@ -42,6 +42,9 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
     password: '',
     confirmPassword: ''
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -213,7 +216,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an Account? </Text>
+          <Text style={styles.footerText}>Already have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignIn')} disabled={loading}>
             <Text style={styles.signInLink}>Sign In</Text>
           </TouchableOpacity>

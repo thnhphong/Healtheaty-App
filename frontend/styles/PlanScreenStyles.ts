@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { width } from '../screens/PlanScreen';
+
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
