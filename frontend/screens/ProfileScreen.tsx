@@ -29,7 +29,8 @@ type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Help: undefined;
-  About: undefined
+  About: undefined;
+  Plan: undefined;
 };
 
 type ProfileScreenProps = {

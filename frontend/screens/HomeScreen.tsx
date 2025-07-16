@@ -31,6 +31,7 @@ type RootStackParamList = {
   EditProfile: undefined;
   Help: undefined;
   About: undefined;
+  Plan: undefined;
 };
 
 

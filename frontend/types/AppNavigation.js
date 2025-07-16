@@ -15,6 +15,7 @@ import ForgotPassword from '../components/ui/ForgotPassword';
 import ScanFoodScreen from '../screens/ScanFoodScreen';
 import HelpScreen from '../screens/HelpScreen';
 import AboutScreen from '../screens/AboutScreen';
+import PlanScreen from '../screens/PlanScreen';
 
 const Stack = createStackNavigator();
 
@@ -33,18 +34,13 @@ const AppNavigator = () => {
         <Stack.Screen name="UserInfo" component={UserInfoScreen} />
         <Stack.Screen name="Help" component={HelpScreen} />
         <Stack.Screen name="About" component={AboutScreen} />
-        <Stack.Screen
-  name="Home"
-  component={HomeScreen}
-  options={{
-    gestureEnabled: false,
-  }}
-/>
+        <Stack.Screen name="Home" component={HomeScreen} options={{gestureEnabled: false,}}/>
 
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} /> 
         <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
         <Stack.Screen name="ScanFood" component={ScanFoodScreen} />
+        <Stack.Screen name="Plan" component={PlanScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

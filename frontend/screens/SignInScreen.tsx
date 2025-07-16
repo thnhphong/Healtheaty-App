@@ -36,6 +36,7 @@ type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   ForgotPassword: undefined;
+  Plan: undefined;
 };
 
 interface SignInScreenProps {

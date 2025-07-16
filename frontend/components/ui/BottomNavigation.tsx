@@ -13,23 +13,25 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ navigation }) => {
   // ✅ Đúng - hook được khai báo bên trong component
   const route = useRoute();
   const [activeTab, setActiveTab] = useState('Home');
-
+  
   const tabs = [
-    { name: 'Home', icon: Home },
-    { name: 'Plan', icon: Calendar },
-    { name: 'Scan', icon: ScanLine, isCenter: true },
-    { name: 'History', icon: Clock },
-    { name: 'Profile', icon: User }
-  ];
+      { name: 'Home', icon: Home },
+      { name: 'Plan', icon: Calendar },
+      { name: 'Scan', icon: ScanLine, isCenter: true },
+      { name: 'History', icon: Clock },
+      { name: 'Profile', icon: User }
+    ];
 
   const handleTabPress = (tabName: string) => {
-    setActiveTab(tabName);
-    if (tabName === 'Scan') {
-      navigation.navigate('ScanFood');
-    } else {
-      navigation.navigate(tabName);
-    }
-  };
+      setActiveTab(tabName);
+      if (tabName === 'Scan') {
+        navigation.navigate('ScanFood');
+      }else if(tabName === 'Plan'){
+        navigation.navigate('Plan');
+      } else {
+        navigation.navigate(tabName);
+      }
+    };
 
   return (
     <View style={{ backgroundColor: 'white', borderTopWidth: 1, borderColor: '#ccc', paddingVertical: 12 }}>
