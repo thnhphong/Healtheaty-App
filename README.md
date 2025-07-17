@@ -149,4 +149,4 @@ Healtheaty-App/
 
 ## 🧠 Author
 
-Developed with ❤️ by **Lloyd To**
+Developed with ❤️ by **Lloyd To, Lam Trung Kien, Bui Hung Phat**
