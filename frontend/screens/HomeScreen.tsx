@@ -7,19 +7,19 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert
+  Alert,
+  FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/HomeScreenStyles';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../backend/config/firebase';
 import { getAuth } from 'firebase/auth';
 //circular calorie progrss from components/ui
 import CircularCalorieProgress from '../components/ui/CircularCalorieProgress';
 //bottom nav
 import BottomNavigation from '../components/ui/BottomNavigation';
-
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -33,7 +33,6 @@ type RootStackParamList = {
   About: undefined;
   Plan: undefined;
 };
-
 
 type HomeScreenProps = {
   navigation: NavigationProp<RootStackParamList, 'Home'>;
@@ -61,6 +60,17 @@ interface CalorieData {
   remaining: number;
 }
 
+interface ScannedProduct {
+  id: string;
+  productName: string;
+  brand: string;
+  calories: number;
+  servingSize: string;
+  imageUrl: string;
+  dateAdded: string;
+  scannedAt: string;
+}
+
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -70,10 +80,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     consumed: 0, 
     remaining: 0
   });
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [mealLog, setMealLog] = useState<ScannedProduct[]>([]);
 
   useEffect(() => {
     loadUserData();
   }, []);
+
+  useEffect(() => {
+    if (userInfo) {
+      loadMealLog(selectedDate);
+    }
+  }, [selectedDate, userInfo]);
 
   // Normalize gender 
   const normalizedGender = (gender: string): 'male' | 'female' | null => {
@@ -82,6 +100,79 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     if(g === 'male' || g === 'female') return g;
     return null;
   }
+
+  const formatDateForQuery = (date: Date): string => {
+    // Use local date to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
+  };
+
+  const loadMealLog = async (date: Date) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) return;
+
+      const dateStr = formatDateForQuery(date);
+      const scannedProductsRef = collection(db, 'scannedProducts');
+      const q = query(
+        scannedProductsRef,
+        where('userId', '==', user.uid),
+        where('dateAdded', '>=', dateStr),
+        where('dateAdded', '<', getNextDay(dateStr))
+      );
+
+      const querySnapshot = await getDocs(q);
+      const products: ScannedProduct[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        let productDate = data.dateAdded || data.scannedAt || '';
+        
+        // Convert UTC timestamp to local date string for comparison
+        if (productDate) {
+          const utcDate = new Date(productDate);
+          const localDateStr = formatDateForQuery(utcDate);
+
+          //filer by local date
+          if(localDateStr === dateStr){
+            products.push({
+              id: doc.id,
+              productName: data.productName || 'Unknown Product',
+              brand: data.brand || '',
+              calories: data.calories || 0,
+              servingSize: data.servingSize || '1 serving',
+              imageUrl: data.imageUrl || '',
+              dateAdded: data.dateAdded || '',
+              scannedAt: data.scannedAt || ''
+            });
+          }
+        }
+      });
+      setMealLog(products);
+
+      // Calculate total consumed calories for the day
+      const totalConsumed = products.reduce((sum, product) => sum + product.calories, 0);
+      
+      setCalorieData(prev => ({
+        ...prev,
+        consumed: totalConsumed,
+        remaining: prev.tdee - totalConsumed
+      }));
+
+    } catch (error) {
+      console.error('Error loading meal log:', error);
+    }
+  };
+
+  const getNextDay = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
+  };
   
   const loadUserData = async () => {
     try {
@@ -140,7 +231,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           avatarUrl: userInfoData.avatarUrl || '', 
         });
   
-        const consumed = 900; 
+        const consumed = 0; // This will be updated by loadMealLog
   
         setCalorieData({
           bmr: userInfoData.bmr,
@@ -210,8 +301,57 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const isToday = (day: number | null): boolean => {
     if (!day) return false;
-    const today = new Date().getDate();
-    return day === today;
+    const today = new Date();
+    return day === today.getDate() && 
+           currentMonth === today.getMonth() && 
+           currentYear === today.getFullYear();
+  };
+
+  const isSelectedDay = (day: number | null): boolean => {
+    if (!day) return false;
+    return day === selectedDate.getDate() && 
+           currentMonth === selectedDate.getMonth() && 
+           currentYear === selectedDate.getFullYear();
+  };
+
+  const handleDayPress = (day: number | null) => {
+    if (day) {
+      const newDate = new Date(currentYear, currentMonth, day);
+      setSelectedDate(newDate);
+    }
+  };
+
+  const renderMealItem = ({ item }: { item: ScannedProduct }) => (
+    <View style={styles.mealItem}>
+      <View style={styles.mealItemContent}>
+        {item.imageUrl ? (
+          <Image source={{ uri: item.imageUrl }} style={styles.mealItemImage} />
+        ) : (
+          <View style={styles.mealItemImagePlaceholder}>
+            <Ionicons name="image" size={24} color="#ccc" />
+          </View>
+        )}
+        <View style={styles.mealItemInfo}>
+          <Text style={styles.mealItemName}>{item.productName}</Text>
+          {item.brand && <Text style={styles.mealItemBrand}>{item.brand}</Text>}
+          <Text style={styles.mealItemServing}>{item.servingSize}</Text>
+        </View>
+        <View style={styles.mealItemCalories}>
+          <Text style={styles.mealItemCalorieNumber}>{item.calories}</Text>
+          <Text style={styles.mealItemCalorieLabel}>kcal</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const getSelectedDateString = (): string => {
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    return selectedDate.toLocaleDateString('en-US', options);
   };
 
   return (
@@ -274,18 +414,46 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 key={index}
                 style={[
                   styles.calendarDay,
-                  (day !== null && day !== undefined && isToday(day)) ? styles.calendarDayToday : null
+                  isToday(day) ? styles.calendarDayToday : null,
+                  isSelectedDay(day) ? styles.calendarDaySelected : null
                 ]}
+                onPress={() => handleDayPress(day)}
               >
                 <Text style={[
                   styles.calendarDayText,
-                  (day !== null && day !== undefined && isToday(day)) ? styles.calendarDayTodayText : null
+                  isToday(day) ? styles.calendarDayTodayText : null,
+                  isSelectedDay(day) ? styles.calendarDaySelectedText : null
                 ]}>
                   {day || ''}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        {/* Meal Log Section */}
+        <View style={styles.mealLogContainer}>
+          <View style={styles.mealLogHeader}>
+            <Ionicons name="time" size={24} color="#FF6B35" />
+            <Text style={styles.mealLogTitle}>Meal Log</Text>
+          </View>
+          <Text style={styles.mealLogDate}>{getSelectedDateString()}</Text>
+          
+          {mealLog.length > 0 ? (
+            <FlatList
+              data={mealLog.reverse()}
+              renderItem={renderMealItem}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <View style={styles.emptyMealLog}>
+              <Ionicons name="restaurant-outline" size={48} color="#ccc" />
+              <Text style={styles.emptyMealLogText}>No meals logged for this day</Text>
+              <Text style={styles.emptyMealLogSubtext}>Scan a product to add to your meal log</Text>
+            </View>
+          )}
         </View>
 
         {/* Stats Cards */}

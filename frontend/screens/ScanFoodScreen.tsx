@@ -103,19 +103,40 @@ export default function ScanFoodScreen() {
       
       if (data.status === 1 && data.product) {
         const product: OpenFoodFactsProduct = data.product;
+
+        const caloriesPer100g = product.nutriments?.['energy_kcal_100g'];
+
+        const engeryKjPer100g = product.nutriments?.['energy_100g'];
+        const caloriesFromKj = engeryKjPer100g ? engeryKjPer100g * 0.23900573614 : null;
+
+        const energyKcal = product?.nutriments?.['energy-kcal'];
+
+          // Use the first available value
+        const calories = caloriesPer100g || caloriesFromKj || energyKcal;
+
+      
+      // Helper function to safely get numeric values
+      const getNumericValue = (value: any): number => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+      };
         
         return {
           barcode,
           productName: product.product_name || 'Unknown Product',
           brand: product.brands || 'Unknown Brand',
-          calories: product.nutriments?.energy_kcal_100g || 0,
+          calories: Math.round(getNumericValue(calories)), 
           nutrients: {
-            fat: product.nutriments?.fat_100g || 0,
-            carbs: product.nutriments?.carbohydrates_100g || 0,
-            protein: product.nutriments?.proteins_100g || 0,
-            sugar: product.nutriments?.sugars_100g || 0,
-            fiber: product.nutriments?.fiber_100g || 0,
-            salt: product.nutriments?.salt_100g || 0,
+            fat: getNumericValue(product.nutriments?.fat_100g),
+            carbs: getNumericValue(product.nutriments?.carbohydrates_100g),
+            protein: getNumericValue(product.nutriments?.proteins_100g),
+            sugar: getNumericValue(product.nutriments?.sugars_100g),
+            fiber: getNumericValue(product.nutriments?.fiber_100g),
+            salt: getNumericValue(product.nutriments?.salt_100g),
           },
           imageUrl: product.image_url || '',
           ingredients: product.ingredients_text || '',
@@ -124,9 +145,18 @@ export default function ScanFoodScreen() {
           nutriScore: product.nutriscore_grade || 'unknown',
         };
       }
+      // Product not found or invalid response
+      console.warn(`Product not found for barcode: ${barcode}`);
       return null;
+      
     } catch (error) {
       console.error('Error fetching product data:', error);
+       // More specific error handling
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('Network error - check internet connection');
+      } else if (error instanceof SyntaxError) {
+        console.error('Invalid JSON response from API');
+      }
       return null;
     }
   };
@@ -486,12 +516,12 @@ export default function ScanFoodScreen() {
               <Text style={styles.sectionTitle}>Nutrition Facts (per 100g)</Text>
               <View style={styles.nutritionGrid}>
                 {[
-                { label: 'Calories', rawValue: parseFloat(scannedProduct.calories) || 0, icon: 'flame', suffix: ' kcal' },
-                { label: 'Fat', rawValue: parseFloat(scannedProduct.nutrients.fat) || 0, icon: 'pizza', suffix: 'g' },
-                { label: 'Carbs', rawValue: parseFloat(scannedProduct.nutrients.carbs) || 0, icon: 'leaf', suffix: 'g' },
-                { label: 'Protein', rawValue: parseFloat(scannedProduct.nutrients.protein) || 0, icon: 'fitness', suffix: 'g' },
-                { label: 'Sugar', rawValue: parseFloat(scannedProduct.nutrients.sugar) || 0, icon: 'ice-cream', suffix: 'g' },
-                { label: 'Fiber', rawValue: parseFloat(scannedProduct.nutrients.fiber) || 0, icon: 'barbell', suffix: 'g' },
+                { label: 'Calories', rawValue: scannedProduct.calories || 0, icon: 'flame', suffix: ' kcal' },
+                { label: 'Fat', rawValue: scannedProduct.nutrients.fat || 0, icon: 'pizza', suffix: 'g' },
+                { label: 'Carbs', rawValue: scannedProduct.nutrients.carbs || 0, icon: 'leaf', suffix: 'g' },
+                { label: 'Protein', rawValue: scannedProduct.nutrients.protein || 0, icon: 'fitness', suffix: 'g' },
+                { label: 'Sugar', rawValue: scannedProduct.nutrients.sugar || 0, icon: 'ice-cream', suffix: 'g' },
+                { label: 'Fiber', rawValue: scannedProduct.nutrients.fiber || 0, icon: 'barbell', suffix: 'g' },
               ].map((item, index) => (
                 <View key={index} style={styles.nutritionItemCard}>
                   <Ionicons name={item.icon} size={24} color="#4CAF50" style={styles.nutritionIcon} />
@@ -520,6 +550,7 @@ export default function ScanFoodScreen() {
                   }}
                 >
                   <Text style={styles.saveButtonText}>Save to My Foods</Text>
+                  
                 </TouchableOpacity>
               </>
             )}

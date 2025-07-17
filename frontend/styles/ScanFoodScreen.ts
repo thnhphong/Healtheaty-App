@@ -28,10 +28,18 @@ export const styles = StyleSheet.create({
       padding: 16,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
+      position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 10,
     },
     foodInfoRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      marginBottom: 16,
     },
     foodIcon: {
       width: 40,
@@ -46,19 +54,8 @@ export const styles = StyleSheet.create({
     resultSubtext: {
       fontSize: 13,
       color: '#777',
+      marginTop: 4,
     },
-
-
-
-
-
-      container: {
-        flex: 1,
-        backgroundColor: '#000',
-      },
-      camera: {
-        flex: 1,
-      },
       cameraOverlay: {
         flex: 1,
         justifyContent: 'space-between',
@@ -88,7 +85,6 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.2)',
-        backdropFilter: 'blur(10px)', // Note: Limited support in React Native
         shadowColor: 'rgba(0, 0, 0, 0.3)',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
@@ -203,24 +199,6 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
       },
-      resultCard: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        backgroundColor: '#fff',
-        padding: 20,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 10,
-      },
-      foodInfoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-      },
       foodImage: {
         width: 80,
         height: 80,
@@ -229,16 +207,6 @@ export const styles = StyleSheet.create({
       },
       foodInfo: {
         flex: 1,
-      },
-      resultText: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        color: '#333',
-      },
-      resultSubtext: {
-        color: '#666',
-        fontSize: 12,
-        marginTop: 4,
       },
       analyzeButton: {
         backgroundColor: '#007AFF',
@@ -347,12 +315,14 @@ export const styles = StyleSheet.create({
         marginBottom: 16,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.2)',
-        backdropFilter: 'blur(10px)', // Note: Limited support in React Native
         shadowColor: 'rgba(0, 0, 0, 0.3)',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
         elevation: 8,
+      },
+      nutritionIcon:{
+        marginBottom: 8,
       },
       nutriScoreContainer: {
         flexDirection: 'row',

@@ -28,6 +28,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ navigation }) => {
         navigation.navigate('ScanFood');
       }else if(tabName === 'Plan'){
         navigation.navigate('Plan');
+      }else if(tabName === 'History'){
+        navigation.navigate('History');
       } else {
         navigation.navigate(tabName);
       }

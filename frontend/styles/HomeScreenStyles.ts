@@ -170,5 +170,110 @@ export const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 100,
-  }
+  },
+  // Add these to your existing styles
+mealLogContainer: {
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 16,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+},
+mealLogHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 8,
+},
+mealLogTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  marginLeft: 8,
+  color: '#333',
+},
+mealLogDate: {
+  fontSize: 14,
+  color: '#666',
+  marginBottom: 16,
+},
+mealItem: {
+  marginBottom: 12,
+},
+mealItemContent: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  padding: 12,
+  backgroundColor: '#f9f9f9',
+  borderRadius: 8,
+},
+mealItemImage: {
+  width: 50,
+  height: 50,
+  borderRadius: 8,
+  marginRight: 12,
+},
+mealItemImagePlaceholder: {
+  width: 50,
+  height: 50,
+  borderRadius: 8,
+  backgroundColor: '#e0e0e0',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginRight: 12,
+},
+mealItemInfo: {
+  flex: 1,
+},
+mealItemName: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#333',
+  marginBottom: 2,
+},
+mealItemBrand: {
+  fontSize: 14,
+  color: '#666',
+  marginBottom: 2,
+},
+mealItemServing: {
+  fontSize: 12,
+  color: '#999',
+},
+mealItemCalories: {
+  alignItems: 'center',
+},
+mealItemCalorieNumber: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#FF6B35',
+},
+mealItemCalorieLabel: {
+  fontSize: 12,
+  color: '#666',
+},
+emptyMealLog: {
+  alignItems: 'center',
+  paddingVertical: 32,
+},
+emptyMealLogText: {
+  fontSize: 16,
+  color: '#666',
+  marginTop: 8,
+},
+emptyMealLogSubtext: {
+  fontSize: 14,
+  color: '#999',
+  marginTop: 4,
+},
+calendarDaySelected: {
+  backgroundColor: '#FF6B35',
+  opacity: 0.8,
+},
+calendarDaySelectedText: {
+  color: '#fff',
+  fontWeight: 'bold',
+},
 });

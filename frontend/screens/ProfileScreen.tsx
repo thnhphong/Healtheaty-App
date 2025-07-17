@@ -111,9 +111,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           text: 'Log Out',
           onPress: async () => {
             try {
-              await AsyncStorage.removeItem('user_uid'); // Clear stored login
-              await auth.signOut(); // Sign out from Firebase
-              navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] }); // Navigate fresh to SignIn
+              navigation.navigate('Welcome');
             } catch (error) {
               Alert.alert('Error', 'Logging out failed');
             }

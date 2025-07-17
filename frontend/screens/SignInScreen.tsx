@@ -24,7 +24,6 @@ import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithCredential } 
 import { auth, db } from '../../backend/config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
-
 WebBrowser.maybeCompleteAuthSession();
 
 type RootStackParamList = {
@@ -136,7 +135,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
       let errorMessage = 'Failed to sign in. Please try again.';
       switch (error.code) {
         case 'auth/user-not-found': errorMessage = 'No account found with this email.'; break;
-        case 'auth/invalid-credential': errorMessage = 'Email hoặc mật khẩu không đúng.'; break;
+        case 'auth/invalid-credential': errorMessage = 'Email or password is wrong.'; break;
         case 'auth/too-many-requests': errorMessage = 'Too many failed attempts. Please try again later.'; break;
         case 'auth/network-request-failed': errorMessage = 'No internet connection.'; break;
         default: if (error.message) errorMessage = error.message;
