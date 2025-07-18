@@ -125,7 +125,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: '#4CAF50',
     paddingVertical: 14,
-    borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
   },

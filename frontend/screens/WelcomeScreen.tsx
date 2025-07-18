@@ -25,6 +25,7 @@ type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Plan: undefined;
+  History: undefined;
 };
 
 interface WelcomeScreenProps {

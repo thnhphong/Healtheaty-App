@@ -16,6 +16,7 @@ import ScanFoodScreen from '../screens/ScanFoodScreen';
 import HelpScreen from '../screens/HelpScreen';
 import AboutScreen from '../screens/AboutScreen';
 import PlanScreen from '../screens/PlanScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 
 const Stack = createStackNavigator();
 
@@ -41,6 +42,7 @@ const AppNavigator = () => {
         <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
         <Stack.Screen name="ScanFood" component={ScanFoodScreen} />
         <Stack.Screen name="Plan" component={PlanScreen} />
+        <Stack.Screen name="History" component={HistoryScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

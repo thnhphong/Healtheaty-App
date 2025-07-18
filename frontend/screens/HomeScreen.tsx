@@ -33,6 +33,7 @@ type RootStackParamList = {
   Help: undefined;
   About: undefined;
   Plan: undefined;
+  History: undefined;
 };
 
 type HomeScreenProps = {
