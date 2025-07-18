@@ -1,7 +1,9 @@
 // frontend/config/firebase.ts
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import {
   FIREBASE_API_KEY,
   FIREBASE_AUTH_DOMAIN,
@@ -19,16 +21,19 @@ const firebaseConfig = {
   storageBucket: FIREBASE_STORAGE_BUCKET,
   messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
   appId: FIREBASE_APP_ID,
-  measurementId: FIREBASE_MEASUREMENT_ID
+  measurementId: FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
+// ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
+// ✅ Initialize Auth with persistence
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
 
-// Initialize Cloud Firestore and get a reference to the service
+// ✅ Initialize Firestore
 export const db = getFirestore(app);
-
+export const storage = getStorage(app);
+// ✅ Export app if needed
 export default app;

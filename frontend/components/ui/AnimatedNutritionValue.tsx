@@ -1,34 +1,57 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Text, StyleSheet } from 'react-native';
+// frontend/components/ui/AnimatedNutritionValue.tsx
+import React, { useEffect, useRef } from 'react';
+import { Text, Animated, StyleSheet } from 'react-native';
 
 interface AnimatedNutritionValueProps {
   value: number;
   suffix?: string;
   duration?: number;
+  style?: any;
 }
 
-const AnimatedNutritionValue: React.FC<AnimatedNutritionValueProps> = ({ value, suffix = '', duration = 1000 }) => {
+const AnimatedNutritionValue: React.FC<AnimatedNutritionValueProps> = ({
+  value,
+  suffix = '',
+  duration = 1000,
+  style
+}) => {
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const [displayed, setDisplayed] = useState('0');
+  const displayValue = useRef(0);
 
   useEffect(() => {
     Animated.timing(animatedValue, {
       toValue: value,
-      duration,
+      duration: duration,
       useNativeDriver: false,
     }).start();
 
-    const listener = animatedValue.addListener(({ value: v }) => {
-      setDisplayed(`${Math.floor(v)}${suffix}`);
+    animatedValue.addListener(({ value }) => {
+      displayValue.current = Math.round(value);
     });
 
-    return () => animatedValue.removeListener(listener);
-  }, [value]);
+    return () => {
+      animatedValue.removeAllListeners();
+    };
+  }, [value, duration]);
 
-  return <Text style={styles.nutritionValue}>{displayed}</Text>;
+  const [displayText, setDisplayText] = React.useState('0');
+
+  useEffect(() => {
+    const listener = animatedValue.addListener(({ value }) => {
+      setDisplayText(Math.round(value).toString());
+    });
+
+    return () => {
+      animatedValue.removeListener(listener);
+    };
+  }, [animatedValue]);
+
+  return (
+    <Text style={[styles.nutritionValue, style]}>
+      {displayText}{suffix}
+    </Text>
+  );
 };
-
-export default AnimatedNutritionValue;
 
 const styles = StyleSheet.create({
   nutritionValue: {
@@ -38,3 +61,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
+
+export default AnimatedNutritionValue;

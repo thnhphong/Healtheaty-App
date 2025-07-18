@@ -8,7 +8,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  FlatList
+  FlatList,
+  ActivityIndicator 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
@@ -69,6 +70,8 @@ interface ScannedProduct {
   imageUrl: string;
   dateAdded: string;
   scannedAt: string;
+  isFromPhoto?: boolean;
+  barcode?: string;
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
@@ -82,6 +85,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   });
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mealLog, setMealLog] = useState<ScannedProduct[]>([]);
+  const [isLoadingMeals, setIsLoadingMeals] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -111,18 +115,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const loadMealLog = async (date: Date) => {
     try {
+      setIsLoadingMeals(true);
       const auth = getAuth();
       const user = auth.currentUser;
 
       if (!user) return;
 
       const dateStr = formatDateForQuery(date);
+      
+      // Query both scannedProducts and foodDiary collections
       const scannedProductsRef = collection(db, 'scannedProducts');
       const q = query(
         scannedProductsRef,
-        where('userId', '==', user.uid),
-        where('dateAdded', '>=', dateStr),
-        where('dateAdded', '<', getNextDay(dateStr))
+        where('userId', '==', user.uid)
       );
 
       const querySnapshot = await getDocs(q);
@@ -134,11 +139,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         
         // Convert UTC timestamp to local date string for comparison
         if (productDate) {
-          const utcDate = new Date(productDate);
-          const localDateStr = formatDateForQuery(utcDate);
+          let localDateStr = '';
+          
+          // Handle different date formats
+          if (productDate.includes('T')) {
+            // ISO string format
+            const utcDate = new Date(productDate);
+            localDateStr = formatDateForQuery(utcDate);
+          } else if (productDate.includes('-') && productDate.length === 10) {
+            // Already in YYYY-MM-DD format
+            localDateStr = productDate;
+          } else {
+            // Try to parse as timestamp
+            const utcDate = new Date(productDate);
+            if (!isNaN(utcDate.getTime())) {
+              localDateStr = formatDateForQuery(utcDate);
+            }
+          }
 
-          //filer by local date
-          if(localDateStr === dateStr){
+          // Filter by local date
+          if (localDateStr === dateStr) {
             products.push({
               id: doc.id,
               productName: data.productName || 'Unknown Product',
@@ -147,11 +167,53 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               servingSize: data.servingSize || '1 serving',
               imageUrl: data.imageUrl || '',
               dateAdded: data.dateAdded || '',
-              scannedAt: data.scannedAt || ''
+              scannedAt: data.scannedAt || '',
+              isFromPhoto: data.isFromPhoto || false,
+              barcode: data.barcode || ''
             });
           }
         }
       });
+
+      // Also check foodDiary collection for additional entries
+      const diaryRef = doc(db, 'foodDiary', `${user.uid}_${dateStr}`);
+      const diaryDoc = await getDoc(diaryRef);
+      
+      if (diaryDoc.exists()) {
+        const diaryData = diaryDoc.data();
+        if (diaryData.foods && Array.isArray(diaryData.foods)) {
+          diaryData.foods.forEach((food: any, index: number) => {
+            // Avoid duplicates by checking if product already exists
+            const exists = products.some(p => 
+              p.productName === food.productName && 
+              p.scannedAt === food.scannedAt
+            );
+            
+            if (!exists) {
+              products.push({
+                id: `diary_${index}`,
+                productName: food.productName || 'Unknown Product',
+                brand: food.brand || '',
+                calories: food.calories || 0,
+                servingSize: food.servingSize || '1 serving',
+                imageUrl: food.imageUrl || '',
+                dateAdded: food.dateAdded || '',
+                scannedAt: food.scannedAt || '',
+                isFromPhoto: food.isFromPhoto || false,
+                barcode: food.barcode || ''
+              });
+            }
+          });
+        }
+      }
+
+      // Sort by scanned time (newest first)
+      products.sort((a, b) => {
+        const timeA = new Date(a.scannedAt || a.dateAdded).getTime();
+        const timeB = new Date(b.scannedAt || b.dateAdded).getTime();
+        return timeB - timeA;
+      });
+
       setMealLog(products);
 
       // Calculate total consumed calories for the day
@@ -160,11 +222,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       setCalorieData(prev => ({
         ...prev,
         consumed: totalConsumed,
-        remaining: prev.tdee - totalConsumed
+        remaining: Math.max(0, prev.tdee - totalConsumed)
       }));
 
     } catch (error) {
       console.error('Error loading meal log:', error);
+      Alert.alert('Error', 'Failed to load meal log. Please try again.');
+    } finally {
+      setIsLoadingMeals(false);
     }
   };
 
@@ -335,6 +400,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Text style={styles.mealItemName}>{item.productName}</Text>
           {item.brand && <Text style={styles.mealItemBrand}>{item.brand}</Text>}
           <Text style={styles.mealItemServing}>{item.servingSize}</Text>
+          
+          {/* Show additional info for different types */}
+          <View style={styles.mealItemMeta}>
+            {item.isFromPhoto && (
+              <View style={styles.mealItemTag}>
+                <Ionicons name="camera" size={12} color="#4CAF50" />
+                <Text style={[styles.mealItemTagText, { color: '#4CAF50' }]}>Photo</Text>
+              </View>
+            )}
+            {item.barcode && (
+              <View style={styles.mealItemTag}>
+                <Ionicons name="barcode" size={12} color="#2196F3" />
+                <Text style={[styles.mealItemTagText, { color: '#2196F3' }]}>Barcode</Text>
+              </View>
+            )}
+          </View>
         </View>
         <View style={styles.mealItemCalories}>
           <Text style={styles.mealItemCalorieNumber}>{item.calories}</Text>
@@ -436,12 +517,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View style={styles.mealLogHeader}>
             <Ionicons name="time" size={24} color="#FF6B35" />
             <Text style={styles.mealLogTitle}>Meal Log</Text>
+            {isLoadingMeals && (
+              <ActivityIndicator size="small" color="#FF6B35" style={{ marginLeft: 10 }} />
+            )}
           </View>
           <Text style={styles.mealLogDate}>{getSelectedDateString()}</Text>
           
           {mealLog.length > 0 ? (
             <FlatList
-              data={mealLog.reverse()}
+              data={mealLog}
               renderItem={renderMealItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
@@ -450,8 +534,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           ) : (
             <View style={styles.emptyMealLog}>
               <Ionicons name="restaurant-outline" size={48} color="#ccc" />
-              <Text style={styles.emptyMealLogText}>No meals logged for this day</Text>
-              <Text style={styles.emptyMealLogSubtext}>Scan a product to add to your meal log</Text>
+              <Text style={styles.emptyMealLogText}>
+                {isLoadingMeals ? 'Loading meals...' : 'No meals logged for this day'}
+              </Text>
+              <Text style={styles.emptyMealLogSubtext}>
+                {!isLoadingMeals && 'Scan a product to add to your meal log'}
+              </Text>
             </View>
           )}
         </View>

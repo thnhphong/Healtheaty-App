@@ -56,10 +56,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#333333',
-    marginBottom: 16,
+    // Sửa lỗi: chỉ giữ lại một thuộc tính color
     color: Colors.primaryInputText,
     backgroundColor: Colors.primaryInput,
+    marginBottom: 16,
   },
   signInButton: {
     backgroundColor: '#FF6B35',
