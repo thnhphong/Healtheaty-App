@@ -21,6 +21,15 @@ import AnimatedNutritionValue from '../components/ui/AnimatedNutritionValue';
 import { foodCalorieDatabase } from '../data/foodCalorieDatabase';
 import { uploadImageToCloudinary } from '../utils/uploadImageToCloudinary';
 import { ROBOFLOW_API_KEY } from '@env';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+
+type RootStackParamList = {
+  History: { refresh?: number };
+};
+
+type NavigationProps = StackNavigationProp<RootStackParamList>;
 
 // Types
 interface CameraPhotoResult {
@@ -44,6 +53,14 @@ interface OpenFoodFactsProduct {
     fiber_100g?: number;
     salt_100g?: number;
   };
+  nutrientsPerServing?: {
+    fat: number;
+    carbs: number;
+    protein: number;
+    sugar: number;
+    fiber: number;
+    salt: number;
+  };
   image_url?: string;
   ingredients_text?: string;
   categories?: string;
@@ -54,8 +71,18 @@ interface ScannedProduct {
   barcode?: string;
   productName: string;
   brand?: string;
+  caloriesPer100g?: number;
+  caloriesPerServing?: number;
   calories: number;
   nutrients?: {
+    fat: number;
+    carbs: number;
+    protein: number;
+    sugar: number;
+    fiber: number;
+    salt: number;
+  };
+  nutrientsPerServing?: {
     fat: number;
     carbs: number;
     protein: number;
@@ -101,9 +128,15 @@ export default function ScanFoodScreen() {
   const [isScanning, setIsScanning] = useState(false);
   const [detectedFoods, setDetectedFoods] = useState<RoboflowPrediction[]>([]);
   const [isMounted, setIsMounted] = useState(true);
+
+  /* change details from per100g to perServing*/
+  const [showPerServing, setShowPerServing] = useState(true);
   
   // Animation cho thanh quét
   const scanLineAnim = useRef(new Animated.Value(0)).current;
+
+  const navigation = useNavigation<NavigationProps>();
+
 
   // Cleanup khi component unmount - improved
   useEffect(() => {
@@ -367,60 +400,115 @@ export default function ScanFoodScreen() {
     ];
   };
 
-  const fetchProductData = async (barcode: string): Promise<ScannedProduct | null> => {
-    try {
-      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-      const data = await response.json();
-      
-      if (data.status === 1 && data.product) {
-        const product: OpenFoodFactsProduct = data.product;
+    const parseProductData = (product: any) => {
+    const nutriments = product.nutriments || {};
 
-        const caloriesPer100g = product.nutriments?.['energy_kcal_100g'];
-        const engeryKjPer100g = product.nutriments?.['energy_100g'];
-        const caloriesFromKj = engeryKjPer100g ? engeryKjPer100g * 0.23900573614 : null;
-        const energyKcal = product?.nutriments?.['energy-kcal'];
+    // Serving size
+    const servingSize = product.serving_size || '100g';
 
-        const calories = caloriesPer100g || caloriesFromKj || energyKcal;
+    // Calories
+    const caloriesPer100g = nutriments['energy-kcal_100g'] || nutriments['energy_100g'] * 0.23900573614 || null;
+    const caloriesPerServing = nutriments['energy-kcal_serving'] || nutriments['energy_serving'] * 0.23900573614 || null;
 
-        const getNumericValue = (value: any): number => {
-          if (typeof value === 'number') return value;
-          if (typeof value === 'string') {
-            const parsed = parseFloat(value);
-            return isNaN(parsed) ? 0 : parsed;
-          }
-          return 0;
-        };
-        
-        return {
-          barcode,
-          productName: product.product_name || 'Unknown Product',
-          brand: product.brands || 'Unknown Brand',
-          calories: Math.round(getNumericValue(calories)), 
-          nutrients: {
-            fat: getNumericValue(product.nutriments?.fat_100g),
-            carbs: getNumericValue(product.nutriments?.carbohydrates_100g),
-            protein: getNumericValue(product.nutriments?.proteins_100g),
-            sugar: getNumericValue(product.nutriments?.sugars_100g),
-            fiber: getNumericValue(product.nutriments?.fiber_100g),
-            salt: getNumericValue(product.nutriments?.salt_100g),
-          },
-          imageUrl: product.image_url || '',
-          ingredients: product.ingredients_text || '',
-          categories: product.categories || '',
-          servingSize: product.serving_size || '100g',
-          nutriScore: product.nutriscore_grade || 'unknown',
-          isFromPhoto: false,
-        };
-      }
-      
-      console.warn(`Product not found for barcode: ${barcode}`);
-      return null;
-      
-    } catch (error) {
-      console.error('Error fetching product data:', error);
-      return null;
-    }
+    // Nutrients
+    const nutrients = {
+      fatPer100g: nutriments['fat_100g'],
+      fatPerServing: nutriments['fat_serving'],
+
+      carbsPer100g: nutriments['carbohydrates_100g'],
+      carbsPerServing: nutriments['carbohydrates_serving'],
+
+      proteinPer100g: nutriments['proteins_100g'],
+      proteinPerServing: nutriments['proteins_serving'],
+
+      sugarPer100g: nutriments['sugars_100g'],
+      sugarPerServing: nutriments['sugars_serving'],
+
+      fiberPer100g: nutriments['fiber_100g'],
+      fiberPerServing: nutriments['fiber_serving'],
+    };
+
+    return {
+      productName: product.product_name || '',
+      brand: product.brands || '',
+      imageUrl: product.image_url || '',
+      ingredients: product.ingredients_text || '',
+      categories: product.categories || '',
+      servingSize,
+      caloriesPer100g,
+      caloriesPerServing,
+      nutrients,
+    };
   };
+
+  const fetchProductData = async (barcode: string): Promise<ScannedProduct | null> => {
+  try {
+    const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data = await response.json();
+
+    if (data.status === 1 && data.product) {
+      const product: any = data.product;
+      const nutriments = product.nutriments || {};
+
+      // Utility to safely convert string or number values
+      const getNumericValue = (value: any): number => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+      };
+
+      // Energy: fallback to kcal, or convert from kJ if needed
+      const energyKcalPer100g = getNumericValue(nutriments['energy-kcal_100g']) ||
+                                getNumericValue(nutriments['energy_100g']) * 0.239;
+      const energyKcalPerServing = getNumericValue(nutriments['energy-kcal_serving']) ||
+                                   getNumericValue(nutriments['energy_serving']) * 0.239;
+
+      const calories = energyKcalPerServing || energyKcalPer100g || 0;
+
+      return {
+        barcode,
+        productName: product.product_name || 'Unknown Product',
+        brand: product.brands || 'Unknown Brand',
+        imageUrl: product.image_url || '',
+        ingredients: product.ingredients_text || 'N/A',
+        categories: product.categories || '',
+        servingSize: product.serving_size || '100g',
+        caloriesPer100g: Math.round(energyKcalPer100g),
+        caloriesPerServing: Math.round(energyKcalPerServing),
+        calories: Math.round(calories),
+        nutrients: {
+          fat: getNumericValue(nutriments['fat_100g']),
+          carbs: getNumericValue(nutriments['carbohydrates_100g']),
+          protein: getNumericValue(nutriments['proteins_100g']),
+          sugar: getNumericValue(nutriments['sugars_100g']),
+          fiber: getNumericValue(nutriments['fiber_100g']),
+          salt: getNumericValue(nutriments['salt_100g']),
+        },
+        nutrientsPerServing: {
+          fat: getNumericValue(nutriments['fat_serving']),
+          carbs: getNumericValue(nutriments['carbohydrates_serving']),
+          protein: getNumericValue(nutriments['proteins_serving']),
+          sugar: getNumericValue(nutriments['sugars_serving']),
+          fiber: getNumericValue(nutriments['fiber_serving']),
+          salt: getNumericValue(nutriments['salt_serving']),
+        },
+        nutriScore: product.nutriscore_grade || 'unknown',
+        isFromPhoto: false,
+      };
+    }
+
+    console.warn(`Product not found for barcode: ${barcode}`);
+    return null;
+
+  } catch (error) {
+    console.error('Error fetching product data:', error);
+    return null;
+  }
+};
+
 
   // Save product to Firebase với better error handling
   const saveProductToFirebase = async (product: ScannedProduct) => {
@@ -911,6 +999,7 @@ export default function ScanFoodScreen() {
       setIsLoading(false);
     }
   };
+  
 
   // Switch scan mode với proper cleanup
   const switchScanMode = () => {
@@ -1015,7 +1104,7 @@ export default function ScanFoodScreen() {
                           {
                             translateY: scanLineAnim.interpolate({
                               inputRange: [0, 1],
-                              outputRange: [0, 180],
+                              outputRange: [-100, 100],
                             }),
                           },
                         ],
@@ -1165,9 +1254,21 @@ export default function ScanFoodScreen() {
                   {/* Nutrition Facts */}
                   <View style={styles.nutritionSection}>
                     <Text style={styles.sectionTitle}>
-                      Nutrition Facts (per {scannedProduct.servingSize})
+                      Nutrition Facts ({showPerServing ? 'per serving' : 'per 100g'} - {scannedProduct.servingSize})
                     </Text>
-                    
+                    <Text style={styles.nutritionItem}>
+                    Calories: 
+                    {showPerServing 
+                      ? scannedProduct.caloriesPerServing?.toFixed(0) ?? 'N/A' 
+                      : scannedProduct.caloriesPer100g?.toFixed(0) ?? 'N/A'}
+                    </Text>
+                    /* change the default setting calorie*/
+                    <TouchableOpacity onPress={() => setShowPerServing(!showPerServing)}>
+                    <Text style={{ color: 'blue', marginBottom: 10 }}>
+                        {showPerServing ? 'Switch to per 100g' : 'Switch to per serving'}
+                    </Text>
+                    </TouchableOpacity>
+
                     {scannedProduct.isFromPhoto ? (
                       // Simplified nutrition for photo-detected foods
                       <View style={styles.nutritionGrid}>
@@ -1179,22 +1280,41 @@ export default function ScanFoodScreen() {
                       </View>
                     ) : (
                       // Full nutrition for barcode-scanned products
-                      <View style={styles.nutritionGrid}>
-                        {[
-                          { label: 'Calories', rawValue: scannedProduct.calories || 0, icon: 'flame', suffix: ' kcal' },
-                          { label: 'Fat', rawValue: scannedProduct.nutrients?.fat || 0, icon: 'pizza', suffix: 'g' },
-                          { label: 'Carbs', rawValue: scannedProduct.nutrients?.carbs || 0, icon: 'leaf', suffix: 'g' },
-                          { label: 'Protein', rawValue: scannedProduct.nutrients?.protein || 0, icon: 'fitness', suffix: 'g' },
-                          { label: 'Sugar', rawValue: scannedProduct.nutrients?.sugar || 0, icon: 'ice-cream', suffix: 'g' },
-                          { label: 'Fiber', rawValue: scannedProduct.nutrients?.fiber || 0, icon: 'barbell', suffix: 'g' },
-                        ].map((item, index) => (
-                          <View key={index} style={styles.nutritionItemCard}>
-                            <Ionicons name={item.icon as any} size={24} color="#4CAF50" style={styles.nutritionIcon} />
-                            <Text style={styles.nutritionLabel}>{item.label}</Text>
-                            <AnimatedNutritionValue value={item.rawValue} suffix={item.suffix} duration={2000} />
-                          </View>
-                        ))}
+                     <View style={styles.nutritionGrid}>
+                    {[
+                      {
+                        label: 'Calories', rawValue: showPerServing ? scannedProduct.caloriesPerServing ?? 0 : scannedProduct.caloriesPer100g ?? 0,
+                        icon: 'flame', suffix: ' kcal',
+                      },
+                      {
+                        label: 'Fat', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.fat ?? 0 : scannedProduct.nutrients?.fat ?? 0,
+                        icon: 'pizza', suffix: 'g',
+                      },
+                      {
+                        label: 'Carbs', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.carbs ?? 0 : scannedProduct.nutrients?.carbs ?? 0,
+                        icon: 'leaf', suffix: 'g',
+                      },
+                      {
+                        label: 'Protein', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.protein ?? 0 : scannedProduct.nutrients?.protein ?? 0,
+                        icon: 'fitness', suffix: 'g',
+                      },
+                      {
+                        label: 'Sugar', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.sugar ?? 0 : scannedProduct.nutrients?.sugar ?? 0,
+                        icon: 'ice-cream', suffix: 'g',
+                      },
+                      {
+                        label: 'Fiber',
+                        rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.fiber ?? 0 : scannedProduct.nutrients?.fiber ?? 0,
+                        icon: 'barbell', suffix: 'g',
+                      },
+                    ].map((item, index) => (
+                      <View key={index} style={styles.nutritionItemCard}>
+                        <Ionicons name={item.icon as any} size={24} color="#4CAF50" style={styles.nutritionIcon} />
+                        <Text style={styles.nutritionLabel}>{item.label}</Text>
+                        <AnimatedNutritionValue value={item.rawValue} suffix={item.suffix} duration={2000} />
                       </View>
+                    ))}
+                  </View>
                     )}
                   </View>
 
@@ -1213,6 +1333,8 @@ export default function ScanFoodScreen() {
                   onPress={() => {
                     saveProductToFirebase(scannedProduct);
                     setShowProductModal(false);
+
+                    navigation.navigate('History', { refresh: Date.now() });
                     resetCamera();
                   }}
                 >

@@ -290,7 +290,9 @@ export const styles = StyleSheet.create({
   },
   calendarDaySelected: {
     backgroundColor: '#FF6B35',
-    opacity: 0.8,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   calendarDaySelectedText: {
     color: '#fff',
