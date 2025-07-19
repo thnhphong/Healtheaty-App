@@ -203,7 +203,7 @@ export default function ScanFoodScreen() {
     try {
       console.log('Analyzing with Roboflow Workflow URL:', imageUrl);
       
-      const correctEndpoint = 'https://serverless.roboflow.com/infer/workflows/healtheaty/detect-count-and-visualize';
+      const correctEndpoint = 'https://serverless.roboflow.com/infer/workflows/healtheaty/detect-count-and-visualize-2';
       
       console.log(`Using correct endpoint: ${correctEndpoint}`);
       
