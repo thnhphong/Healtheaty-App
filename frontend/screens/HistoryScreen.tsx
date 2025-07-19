@@ -1,5 +1,5 @@
 // frontend/screens/HistoryScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import { getAuth } from 'firebase/auth';
 import { LineChart } from 'react-native-chart-kit';
 import BottomNavigation from '../components/ui/BottomNavigation';
 import { styles } from '../styles/HistoryScreenStyles';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
+
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -79,6 +81,13 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigation }) => {
   const [avgDailyCalories, setAvgDailyCalories] = useState(0);
   const [mostConsumedProduct, setMostConsumedProduct] = useState<string>('');
 
+  const route = useRoute() as { params?: { refresh?: number } };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMealHistory();
+    },  [route.params?.refresh])
+  );
   useEffect(() => {
     loadMealHistory();
   }, []);

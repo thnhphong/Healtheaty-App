@@ -1,90 +1,77 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Home, Calendar, ScanLine, Clock, User } from 'lucide-react-native'; 
-import { NavigationProp } from '@react-navigation/native';
-import { useRoute } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { Home, Calendar, ScanLine, Clock, User } from 'lucide-react-native';
+import { NavigationProp, useRoute } from '@react-navigation/native';
 
-// Inside props
+const screenWidth = Dimensions.get('window').width;
+
 interface BottomNavigationProps {
   navigation: NavigationProp<any>;
 }
 
 const BottomNavigation: React.FC<BottomNavigationProps> = ({ navigation }) => {
-  // ✅ Đúng - hook được khai báo bên trong component
   const route = useRoute();
-  const [activeTab, setActiveTab] = useState('Home');
-  
-  const tabs = [
-      { name: 'Home', icon: Home },
-      { name: 'Plan', icon: Calendar },
-      { name: 'Scan', icon: ScanLine, isCenter: true },
-      { name: 'History', icon: Clock },
-      { name: 'Profile', icon: User }
-    ];
 
   const handleTabPress = (tabName: string) => {
-      setActiveTab(tabName);
-      if (tabName === 'Scan') {
-        navigation.navigate('ScanFood');
-      }else if(tabName === 'Plan'){
-        navigation.navigate('Plan');
-      }else if(tabName === 'History'){
-        navigation.navigate('History');
-      } else {
-        navigation.navigate(tabName);
-      }
-    };
+    if (tabName === 'Scan') {
+      navigation.navigate('ScanFood');
+    } else {
+      navigation.navigate(tabName);
+    }
+  };
 
   return (
-    <View style={{ backgroundColor: 'white', borderTopWidth: 1, borderColor: '#ccc', paddingVertical: 12 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = route.name === tab.name;
+    <View style={{
+      backgroundColor: 'white',
+      borderTopWidth: 1,
+      borderColor: '#ccc',
+      height: 70,
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+    }}>
 
-          return (
-            <TouchableOpacity
-              key={tab.name}
-              onPress={() => handleTabPress(tab.name)}
-              style={{ alignItems: 'center', marginTop: tab.isCenter ? -60 : 0 }}
-            >
-              <View
-                style={{
-                  backgroundColor: tab.isCenter
-                    ? '#FF6B35'
-                    : isActive
-                    ? '#FFEDE4'
-                    : 'transparent',
-                  padding: tab.isCenter ? 16 : 10,
-                  borderRadius: tab.isCenter ? 50 : 16,
-                }}
-              >
-                <Icon
-                  size={tab.isCenter ? 36 : 20}
-                  color={
-                    tab.isCenter
-                      ? '#fff'
-                      : isActive
-                      ? '#FF6B35'
-                      : '#999'
-                  }
-                />
-              </View>
-              {!tab.isCenter && (
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: isActive ? '#FF6B35' : '#999',
-                    marginTop: 4,
-                  }}
-                >
-                  {tab.name}
-                </Text>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <TouchableOpacity onPress={() => handleTabPress('Home')} style={{ alignItems: 'center' }}>
+        <Home color={route.name === 'Home' ? '#FF6B35' : '#999'} size={24} />
+        <Text style={{ fontSize: 12, color: route.name === 'Home' ? '#FF6B35' : '#999' }}>Home</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => handleTabPress('Plan')} style={{ alignItems: 'center' }}>
+        <Calendar color={route.name === 'Plan' ? '#FF6B35' : '#999'} size={24} />
+        <Text style={{ fontSize: 12, color: route.name === 'Plan' ? '#FF6B35' : '#999' }}>Plan</Text>
+      </TouchableOpacity>
+
+      <View style={{ width: 70 }} />
+
+      <TouchableOpacity onPress={() => handleTabPress('History')} style={{ alignItems: 'center' }}>
+        <Clock color={route.name === 'History' ? '#FF6B35' : '#999'} size={24} />
+        <Text style={{ fontSize: 12, color: route.name === 'History' ? '#FF6B35' : '#999' }}>History</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => handleTabPress('Profile')} style={{ alignItems: 'center' }}>
+        <User color={route.name === 'Profile' ? '#FF6B35' : '#999'} size={24} />
+        <Text style={{ fontSize: 12, color: route.name === 'Profile' ? '#FF6B35' : '#999' }}>Profile</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => handleTabPress('Scan')}
+        style={{
+          position: 'absolute',
+          top: -30,
+          left: screenWidth / 2 - 35,
+          backgroundColor: '#FF6B35',
+          borderRadius: 35,
+          padding: 18,
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 4,
+        }}
+      >
+        <ScanLine color="#fff" size={28} />
+      </TouchableOpacity>
+
     </View>
   );
 };

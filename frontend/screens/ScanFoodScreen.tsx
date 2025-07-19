@@ -21,6 +21,15 @@ import AnimatedNutritionValue from '../components/ui/AnimatedNutritionValue';
 import { foodCalorieDatabase } from '../data/foodCalorieDatabase';
 import { uploadImageToCloudinary } from '../utils/uploadImageToCloudinary';
 import { ROBOFLOW_API_KEY } from '@env';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+
+type RootStackParamList = {
+  History: { refresh?: number };
+};
+
+type NavigationProps = StackNavigationProp<RootStackParamList>;
 
 // Types
 interface CameraPhotoResult {
@@ -125,6 +134,9 @@ export default function ScanFoodScreen() {
   
   // Animation cho thanh quét
   const scanLineAnim = useRef(new Animated.Value(0)).current;
+
+  const navigation = useNavigation<NavigationProps>();
+
 
   // Cleanup khi component unmount - improved
   useEffect(() => {
@@ -1092,7 +1104,7 @@ export default function ScanFoodScreen() {
                           {
                             translateY: scanLineAnim.interpolate({
                               inputRange: [0, 1],
-                              outputRange: [0, 180],
+                              outputRange: [-100, 100],
                             }),
                           },
                         ],
@@ -1321,6 +1333,8 @@ export default function ScanFoodScreen() {
                   onPress={() => {
                     saveProductToFirebase(scannedProduct);
                     setShowProductModal(false);
+
+                    navigation.navigate('History', { refresh: Date.now() });
                     resetCamera();
                   }}
                 >
