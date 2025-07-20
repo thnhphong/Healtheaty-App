@@ -11,6 +11,7 @@ import {
   Animated,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '../../backend/config/firebase';
@@ -20,10 +21,9 @@ import { styles } from '../styles/ScanFoodScreen';
 import AnimatedNutritionValue from '../components/ui/AnimatedNutritionValue';
 import { foodCalorieDatabase } from '../data/foodCalorieDatabase';
 import { uploadImageToCloudinary } from '../utils/uploadImageToCloudinary';
-import { ROBOFLOW_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-
+import { vietnameseFoodNutrition } from '../../backend/data/foodCalorieDatabase';
 
 type RootStackParamList = {
   History: { refresh?: number };
@@ -31,7 +31,33 @@ type RootStackParamList = {
 
 type NavigationProps = StackNavigationProp<RootStackParamList>;
 
-// Types
+// Types for Vietnamese Food API
+interface VietnameseFoodPrediction {
+  rank: number;
+  class_id: string;
+  class_name: string;
+  confidence: number;
+  percentage: number;
+}
+
+interface VietnameseFoodAPIResponse {
+  success: boolean;
+  best_prediction: {
+    food_name: string;
+    confidence: number;
+    percentage: number;
+  };
+  top_predictions: VietnameseFoodPrediction[];
+  model_info: {
+    total_classes: number;
+    model_type: string;
+    tensorflow_version: string;
+  };
+  error?: string;
+  message?: string;
+}
+
+// Existing types
 interface CameraPhotoResult {
   uri: string;
   width?: number;
@@ -92,28 +118,21 @@ interface ScannedProduct {
   };
   imageUrl: string;
   ingredients?: string;
-  categories?: string;
   servingSize: string;
   nutriScore?: string;
   isFromPhoto?: boolean;
-}
-
-interface RoboflowPrediction {
-  class: string;
-  confidence: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface RoboflowResponse {
-  outputs: Array<{
-    predictions: RoboflowPrediction[];
-  }>;
+  // New fields for Vietnamese food
+  confidence?: number;
+  isVietnameseFood?: boolean;
+  allPredictions?: VietnameseFoodPrediction[];
 }
 
 type ScanMode = 'photo' | 'barcode';
+
+
+  const VIETNAMESE_FOOD_API_URL = 'http://192.168.1.2:5000'; 
+// const VIETNAMESE_FOOD_API_URL = 'https://vietnamese-food-classifier-api-production.up.railway.app';
+
 
 export default function ScanFoodScreen() {
   const cameraRef = useRef<CameraView>(null);
@@ -122,47 +141,205 @@ export default function ScanFoodScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [facing, setFacing] = useState<CameraType>('back');
-  const [scanMode, setScanMode] = useState<ScanMode>('barcode');
+  const [scanMode, setScanMode] = useState<ScanMode>('photo');
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [detectedFoods, setDetectedFoods] = useState<RoboflowPrediction[]>([]);
+  const [vietnameseFoodPredictions, setVietnameseFoodPredictions] = useState<VietnameseFoodPrediction[]>([]);
   const [isMounted, setIsMounted] = useState(true);
-
-  /* change details from per100g to perServing*/
   const [showPerServing, setShowPerServing] = useState(true);
   
-  // Animation cho thanh quét
   const scanLineAnim = useRef(new Animated.Value(0)).current;
-
   const navigation = useNavigation<NavigationProps>();
 
+  // ==========================================
+  // 🍜 VIETNAMESE FOOD API FUNCTIONS
+  // ==========================================
 
-  // Cleanup khi component unmount - improved
+  const analyzeVietnameseFood = async (imageUri: string): Promise<VietnameseFoodAPIResponse> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+    try {
+      console.log('🍜 Analyzing Vietnamese food with API...');
+      
+      // Convert image to base64
+      const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      console.log(`📸 Image converted to base64, size: ${base64.length} characters`);
+
+      const response = await fetch(`${VIETNAMESE_FOOD_API_URL}/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          image: base64,
+          top_k: 5 
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!isMounted) {
+        throw new Error('Component unmounted');
+      }
+
+      console.log(`🌐 API Response status: ${response.status}`);
+      
+      if (response.status === 503) {
+        throw new Error('MODEL_NOT_LOADED');
+      }
+      
+      if (response.status === 400) {
+        throw new Error('INVALID_IMAGE');
+      }
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ API Error:`, errorText);
+        throw new Error(`API_ERROR_${response.status}`);
+      }
+
+      const result: VietnameseFoodAPIResponse = await response.json();
+      console.log(`✅ Vietnamese Food API Success:`, JSON.stringify(result, null, 2));
+      
+      if (!result.success) {
+        throw new Error(result.message || 'PREDICTION_FAILED');
+      }
+
+      return result;
+      
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        console.log('⏱️ Vietnamese Food API request timeout');
+        throw new Error('REQUEST_TIMEOUT');
+      }
+      
+      console.error('❌ Error analyzing Vietnamese food:', error);
+      
+      // Handle specific error types
+      if (error.message === 'MODEL_NOT_LOADED') {
+        throw new Error('🤖 AI model is loading. Please try again in a moment.');
+      }
+      
+      if (error.message === 'INVALID_IMAGE') {
+        throw new Error('📸 Image format not supported. Please try a different image.');
+      }
+      
+      if (error.message === 'REQUEST_TIMEOUT') {
+        throw new Error('⏱️ Request timeout. Please check your internet connection.');
+      }
+      
+      throw new Error('🔌 Could not connect to Vietnamese Food AI service.');
+    }
+  };
+
+  const testAPIConnection = async (): Promise<boolean> => {
+    try {
+      console.log('🔍 Testing Vietnamese Food API connection...');
+      
+      const response = await fetch(`${VIETNAMESE_FOOD_API_URL}/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ API Connection Test Success:', result);
+        return result.model_loaded === true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ API Connection Test Failed:', error);
+      return false;
+    }
+  };
+
+  const createVietnameseFoodProduct = (
+    prediction: VietnameseFoodPrediction, 
+    allPredictions: VietnameseFoodPrediction[], 
+    imageUrl: string
+  ): ScannedProduct => {
+    const foodId = prediction.class_id;
+    const foodName = prediction.class_name;
+    const confidence = prediction.confidence;
+    
+    // Get nutrition info from database
+    const nutritionInfo = vietnameseFoodNutrition[foodId] || {
+      calories: 200,
+      protein: 10,
+      carbs: 30,
+      fat: 5
+    };
+
+    return {
+      productName: foodName,
+      calories: nutritionInfo.calories,
+      caloriesPer100g: nutritionInfo.calories,
+      caloriesPerServing: nutritionInfo.calories,
+      imageUrl: imageUrl,
+      isFromPhoto: true,
+      isVietnameseFood: true,
+      confidence: confidence,
+      allPredictions: allPredictions,
+      servingSize: '1 phần',
+      nutrients: {
+        fat: nutritionInfo.fat,
+        carbs: nutritionInfo.carbs,
+        protein: nutritionInfo.protein,
+        sugar: 5, // Default
+        fiber: 3, // Default
+        salt: 1.5, // Default
+      },
+      nutrientsPerServing: {
+        fat: nutritionInfo.fat,
+        carbs: nutritionInfo.carbs,
+        protein: nutritionInfo.protein,
+        sugar: 5,
+        fiber: 3,
+        salt: 1.5,
+      }
+    };
+  };
+
+  // ==========================================
+  // EXISTING FUNCTIONS (Modified to include Vietnamese Food API)
+  // ==========================================
+
   useEffect(() => {
     setIsMounted(true);
-    console.log('ScanFoodScreen mounted');
+    console.log('🍜 ScanFoodScreen mounted - Testing Vietnamese Food API...');
+    
+    // Test API connection on mount
+    testAPIConnection().then(isConnected => {
+      if (isConnected) {
+        console.log('✅ Vietnamese Food API is ready!');
+      } else {
+        console.log('⚠️ Vietnamese Food API not available - fallback mode enabled');
+      }
+    });
     
     return () => {
-      console.log('ScanFoodScreen unmounting - cleaning up...');
+      console.log('🍜 ScanFoodScreen unmounting - cleaning up...');
       setIsMounted(false);
-      
-      // Stop tất cả animations
       scanLineAnim.stopAnimation();
-      
-      // Clear tất cả timeouts (nếu có)
-      // clearTimeout(timeoutId);
-      
-      // Reset tất cả states
       setIsLoading(false);
       setIsScanning(false);
       setImageUri(null);
       setScannedProduct(null);
       setShowProductModal(false);
-      setDetectedFoods([]);
+      setVietnameseFoodPredictions([]);
       setCameraReady(false);
-      
-      console.log('ScanFoodScreen cleanup completed');
+      console.log('✅ ScanFoodScreen cleanup completed');
     };
   }, []);
 
@@ -192,7 +369,7 @@ export default function ScanFoodScreen() {
     requestCameraPermission();
   }, [permission, requestPermission, isMounted]);
 
-  // Animation cho thanh quét - chỉ chạy trong khung
+  // Animation cho thanh quét
   useEffect(() => {
     if (!isMounted || scanMode !== 'barcode') return;
     
@@ -228,202 +405,206 @@ export default function ScanFoodScreen() {
     }
   }, [isMounted]);
 
-  // Analyze food image using Roboflow Workflow API với better error handling
-  const analyzeFoodWithRoboflow = async (imageUrl: string): Promise<RoboflowPrediction[]> => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+  // ==========================================
+  // FOOD ANALYSIS FUNCTIONS (Updated)
+  // ==========================================
 
+  const analyzeFoodImageFromLibrary = async (uri: string) => {
     try {
-      console.log('Analyzing with Roboflow Workflow URL:', imageUrl);
+      setIsLoading(true);
       
-      const correctEndpoint = 'https://serverless.roboflow.com/infer/workflows/healtheaty/detect-count-and-visualize-2';
+      console.log('🍜 Starting Vietnamese food analysis from library...');
       
-      console.log(`Using correct endpoint: ${correctEndpoint}`);
+      // First try Vietnamese Food API
+      try {
+        const apiResult = await analyzeVietnameseFood(uri);
+        
+        if (apiResult.success && apiResult.top_predictions.length > 0) {
+          console.log('✅ Vietnamese Food API successful!');
+          
+          setVietnameseFoodPredictions(apiResult.top_predictions);
+          
+          // Create product from best prediction
+          const detectedProduct = createVietnameseFoodProduct(
+            apiResult.top_predictions[0],
+            apiResult.top_predictions,
+            uri // Use local image URI for now, can upload to Cloudinary if needed
+          );
+
+          setScannedProduct(detectedProduct);
+          setShowProductModal(true);
+          return;
+        }
+      } catch (apiError) {
+        console.log('⚠️ Vietnamese Food API failed, trying fallback...', apiError.message);
+        
+        // Show user-friendly message but continue with fallback
+        Alert.alert(
+          "AI Service Update", 
+          `${apiError.message}\n\nDon't worry! You can still save your food manually.`,
+          [
+            { text: "Try Again", onPress: () => setImageUri(null) },
+            { 
+              text: "Continue Manually", 
+              onPress: () => {
+                const manualProduct: ScannedProduct = {
+                  productName: 'Vietnamese Food - Please Edit Name',
+                  calories: 250,
+                  servingSize: '1 phần',
+                  imageUrl: uri,
+                  isFromPhoto: true,
+                  isVietnameseFood: false,
+                };
+                setScannedProduct(manualProduct);
+                setShowProductModal(true);
+              }
+            }
+          ]
+        );
+        return;
+      }
+
+      // If Vietnamese API didn't work, try uploading to Cloudinary for other services
+      console.log('📤 Uploading to Cloudinary for fallback recognition...');
+      const uploadedImageUrl = await uploadImageToCloudinary(uri);
       
-      const response = await fetch(correctEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          api_key: ROBOFLOW_API_KEY,
-          inputs: {
-            "image": {
-              "type": "url", 
-              "value": imageUrl
+      if (!uploadedImageUrl) {
+        throw new Error('Failed to upload image');
+      }
+
+      // Fallback: Use original food detection logic
+      Alert.alert(
+        "Manual Food Entry", 
+        "Vietnamese food AI is temporarily unavailable. Please enter the food details manually.",
+        [
+          { text: "Try Again", onPress: () => setImageUri(null) },
+          { 
+            text: "Enter Manually", 
+            onPress: () => {
+              const manualProduct: ScannedProduct = {
+                productName: 'Food Item - Please Edit Name',
+                calories: 200,
+                servingSize: '100g',
+                imageUrl: uploadedImageUrl,
+                isFromPhoto: true,
+              };
+              setScannedProduct(manualProduct);
+              setShowProductModal(true);
             }
           }
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!isMounted) return [];
-
-      console.log(`Response status from correct endpoint:`, response.status);
-      
-      if (response.status === 401) {
-        console.error('API Key unauthorized');
-        throw new Error('API_KEY_INVALID');
-      }
-      
-      if (response.status === 403) {
-        console.error('Access forbidden');
-        throw new Error('ACCESS_DENIED');
-      }
-      
-      if (response.status === 404) {
-        console.error('Workflow not found');
-        throw new Error('WORKFLOW_NOT_FOUND');
-      }
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error from workflow:`, errorText);
-        throw new Error(`WORKFLOW_ERROR_${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log(`Success result from workflow:`, JSON.stringify(result, null, 2));
-      
-      // Parse workflow response format
-      let predictions = [];
-      
-      if (result.outputs && result.outputs.length > 0) {
-        const output = result.outputs[0];
-        console.log('Output structure:', JSON.stringify(output, null, 2));
-        
-        if (output.predictions) {
-          if (Array.isArray(output.predictions)) {
-            predictions = output.predictions;
-          } else if (output.predictions.predictions && Array.isArray(output.predictions.predictions)) {
-            predictions = output.predictions.predictions;
-          } else if (typeof output.predictions === 'object') {
-            predictions = [output.predictions];
-          }
-        } else if (output.detections) {
-          predictions = Array.isArray(output.detections) ? output.detections : [output.detections];
-        }
-        
-        console.log('Parsed predictions:', predictions);
-        console.log('Count objects detected:', output.count_objects);
-      }
-      
-      if (Array.isArray(predictions) && predictions.length > 0) {
-        return predictions;
-      }
-      
-      if (result.outputs[0]?.count_objects > 0) {
-        console.log('Found objects but could not parse predictions, creating fallback...');
-        return [{
-          class: 'detected_food',
-          confidence: 0.8,
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100
-        }];
-      }
-      
-      console.log('No predictions found, trying fallback endpoints...');
-      return await tryFallbackEndpoints(imageUrl);
+        ]
+      );
       
     } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (error.name === 'AbortError') {
-        console.log('Request was aborted due to timeout');
-        throw new Error('REQUEST_TIMEOUT');
-      }
-      
-      console.error('Error analyzing food with Roboflow Workflow:', error);
-      
-      if (error.message === 'API_KEY_INVALID' || 
-          error.message === 'ACCESS_DENIED' || 
-          error.message === 'WORKFLOW_NOT_FOUND') {
-        console.log('Using fallback food recognition...');
-        return await getFallbackFoodPrediction();
-      }
-      
-      throw error;
+      console.error('❌ Error analyzing food from library:', error);
+      Alert.alert(
+        "Analysis Failed", 
+        "Could not analyze the image. Please check your internet connection and try again.",
+        [
+          { text: "Try Again", onPress: () => setImageUri(null) },
+          { text: "OK" }
+        ]
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Fallback endpoints nếu workflow chính fail
-  const tryFallbackEndpoints = async (imageUrl: string): Promise<RoboflowPrediction[]> => {
-    const fallbackEndpoints = [
-      'https://detect.roboflow.com/healtheaty/1',
-      'https://detect.roboflow.com/healtheaty/2', 
-      'https://detect.roboflow.com/food-detection/1'
-    ];
-    
-    for (const endpoint of fallbackEndpoints) {
+  const analyzeFoodImage = async () => {
+    if (!imageUri) return;
+
+    try {
+      setIsLoading(true);
+      
+      console.log('🍜 Starting Vietnamese food analysis from camera...');
+      
+      // Try Vietnamese Food API first
       try {
-        console.log(`Trying fallback endpoint: ${endpoint}`);
+        const apiResult = await analyzeVietnameseFood(imageUri);
         
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: `api_key=${ROBOFLOW_API_KEY}&image=${encodeURIComponent(imageUrl)}`
-        });
+        if (apiResult.success && apiResult.top_predictions.length > 0) {
+          console.log('✅ Vietnamese Food API successful from camera!');
+          
+          setVietnameseFoodPredictions(apiResult.top_predictions);
+          
+          const detectedProduct = createVietnameseFoodProduct(
+            apiResult.top_predictions[0],
+            apiResult.top_predictions,
+            imageUri
+          );
 
-        if (response.ok) {
-          const result = await response.json();
-          if (result.predictions && Array.isArray(result.predictions) && result.predictions.length > 0) {
-            console.log(`Success with fallback: ${endpoint}`);
-            return result.predictions;
-          }
+          setScannedProduct(detectedProduct);
+          setShowProductModal(true);
+          return;
         }
-      } catch (fallbackError) {
-        console.log(`Fallback ${endpoint} failed:`, fallbackError.message);
-        continue;
+      } catch (apiError) {
+        console.log('⚠️ Vietnamese Food API failed from camera, using fallback...', apiError.message);
       }
+
+      // Fallback: Upload to Cloudinary and use manual entry
+      console.log('📤 Uploading camera image to Cloudinary...');
+      const uploadedImageUrl = await uploadImageToCloudinary(imageUri);
+      
+      if (!uploadedImageUrl) {
+        throw new Error('Failed to upload image');
+      }
+
+      Alert.alert(
+        "Food Detected", 
+        "Vietnamese food AI is temporarily unavailable. You can still save your food with estimated nutrition values.",
+        [
+          { text: "Retake Photo", onPress: () => resetCamera() },
+          { 
+            text: "Save Anyway", 
+            onPress: () => {
+              const manualProduct: ScannedProduct = {
+                productName: 'Vietnamese Food Item',
+                calories: 250,
+                servingSize: '1 phần',
+                imageUrl: uploadedImageUrl,
+                isFromPhoto: true,
+              };
+              setScannedProduct(manualProduct);
+              setShowProductModal(true);
+            }
+          }
+        ]
+      );
+      
+    } catch (error) {
+      console.error('❌ Error analyzing camera food:', error);
+      Alert.alert(
+        "Analysis Failed", 
+        "Could not analyze the image. Please check your internet connection and try again.",
+        [
+          { text: "Retake Photo", onPress: () => resetCamera() },
+          { text: "OK" }
+        ]
+      );
+    } finally {
+      setIsLoading(false);
     }
-    
-    return [];
   };
 
-  // Fallback food prediction khi API không khả dụng
-  const getFallbackFoodPrediction = async (): Promise<RoboflowPrediction[]> => {
-    return [
-      {
-        class: 'general_food',
-        confidence: 0.5,
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100
-      }
-    ];
-  };
+  // ==========================================
+  // EXISTING FUNCTIONS (Keep as-is)
+  // ==========================================
 
-    const parseProductData = (product: any) => {
+  const parseProductData = (product: any) => {
     const nutriments = product.nutriments || {};
-
-    // Serving size
     const servingSize = product.serving_size || '100g';
-
-    // Calories
     const caloriesPer100g = nutriments['energy-kcal_100g'] || nutriments['energy_100g'] * 0.23900573614 || null;
     const caloriesPerServing = nutriments['energy-kcal_serving'] || nutriments['energy_serving'] * 0.23900573614 || null;
 
-    // Nutrients
     const nutrients = {
       fatPer100g: nutriments['fat_100g'],
       fatPerServing: nutriments['fat_serving'],
-
       carbsPer100g: nutriments['carbohydrates_100g'],
       carbsPerServing: nutriments['carbohydrates_serving'],
-
       proteinPer100g: nutriments['proteins_100g'],
       proteinPerServing: nutriments['proteins_serving'],
-
       sugarPer100g: nutriments['sugars_100g'],
       sugarPerServing: nutriments['sugars_serving'],
-
       fiberPer100g: nutriments['fiber_100g'],
       fiberPerServing: nutriments['fiber_serving'],
     };
@@ -442,75 +623,70 @@ export default function ScanFoodScreen() {
   };
 
   const fetchProductData = async (barcode: string): Promise<ScannedProduct | null> => {
-  try {
-    const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-    const data = await response.json();
+    try {
+      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+      const data = await response.json();
 
-    if (data.status === 1 && data.product) {
-      const product: any = data.product;
-      const nutriments = product.nutriments || {};
+      if (data.status === 1 && data.product) {
+        const product: any = data.product;
+        const nutriments = product.nutriments || {};
 
-      // Utility to safely convert string or number values
-      const getNumericValue = (value: any): number => {
-        if (typeof value === 'number') return value;
-        if (typeof value === 'string') {
-          const parsed = parseFloat(value);
-          return isNaN(parsed) ? 0 : parsed;
-        }
-        return 0;
-      };
+        const getNumericValue = (value: any): number => {
+          if (typeof value === 'number') return value;
+          if (typeof value === 'string') {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? 0 : parsed;
+          }
+          return 0;
+        };
 
-      // Energy: fallback to kcal, or convert from kJ if needed
-      const energyKcalPer100g = getNumericValue(nutriments['energy-kcal_100g']) ||
-                                getNumericValue(nutriments['energy_100g']) * 0.239;
-      const energyKcalPerServing = getNumericValue(nutriments['energy-kcal_serving']) ||
-                                   getNumericValue(nutriments['energy_serving']) * 0.239;
+        const energyKcalPer100g = getNumericValue(nutriments['energy-kcal_100g']) ||
+                                  getNumericValue(nutriments['energy_100g']) * 0.239;
+        const energyKcalPerServing = getNumericValue(nutriments['energy-kcal_serving']) ||
+                                     getNumericValue(nutriments['energy_serving']) * 0.239;
 
-      const calories = energyKcalPerServing || energyKcalPer100g || 0;
+        const calories = energyKcalPerServing || energyKcalPer100g || 0;
 
-      return {
-        barcode,
-        productName: product.product_name || 'Unknown Product',
-        brand: product.brands || 'Unknown Brand',
-        imageUrl: product.image_url || '',
-        ingredients: product.ingredients_text || 'N/A',
-        categories: product.categories || '',
-        servingSize: product.serving_size || '100g',
-        caloriesPer100g: Math.round(energyKcalPer100g),
-        caloriesPerServing: Math.round(energyKcalPerServing),
-        calories: Math.round(calories),
-        nutrients: {
-          fat: getNumericValue(nutriments['fat_100g']),
-          carbs: getNumericValue(nutriments['carbohydrates_100g']),
-          protein: getNumericValue(nutriments['proteins_100g']),
-          sugar: getNumericValue(nutriments['sugars_100g']),
-          fiber: getNumericValue(nutriments['fiber_100g']),
-          salt: getNumericValue(nutriments['salt_100g']),
-        },
-        nutrientsPerServing: {
-          fat: getNumericValue(nutriments['fat_serving']),
-          carbs: getNumericValue(nutriments['carbohydrates_serving']),
-          protein: getNumericValue(nutriments['proteins_serving']),
-          sugar: getNumericValue(nutriments['sugars_serving']),
-          fiber: getNumericValue(nutriments['fiber_serving']),
-          salt: getNumericValue(nutriments['salt_serving']),
-        },
-        nutriScore: product.nutriscore_grade || 'unknown',
-        isFromPhoto: false,
-      };
+        return {
+          barcode,
+          productName: product.product_name || 'Unknown Product',
+          brand: product.brands || 'Unknown Brand',
+          imageUrl: product.image_url || '',
+          ingredients: product.ingredients_text || 'N/A',
+          servingSize: product.serving_size || '100g',
+          caloriesPer100g: Math.round(energyKcalPer100g),
+          caloriesPerServing: Math.round(energyKcalPerServing),
+          calories: Math.round(calories),
+          nutrients: {
+            fat: getNumericValue(nutriments['fat_100g']),
+            carbs: getNumericValue(nutriments['carbohydrates_100g']),
+            protein: getNumericValue(nutriments['proteins_100g']),
+            sugar: getNumericValue(nutriments['sugars_100g']),
+            fiber: getNumericValue(nutriments['fiber_100g']),
+            salt: getNumericValue(nutriments['salt_100g']),
+          },
+          nutrientsPerServing: {
+            fat: getNumericValue(nutriments['fat_serving']),
+            carbs: getNumericValue(nutriments['carbohydrates_serving']),
+            protein: getNumericValue(nutriments['proteins_serving']),
+            sugar: getNumericValue(nutriments['sugars_serving']),
+            fiber: getNumericValue(nutriments['fiber_serving']),
+            salt: getNumericValue(nutriments['salt_serving']),
+          },
+          nutriScore: product.nutriscore_grade || 'unknown',
+          isFromPhoto: false,
+        };
+      }
+
+      console.warn(`Product not found for barcode: ${barcode}`);
+      return null;
+
+    } catch (error) {
+      console.error('Error fetching product data:', error);
+      return null;
     }
+  };
 
-    console.warn(`Product not found for barcode: ${barcode}`);
-    return null;
-
-  } catch (error) {
-    console.error('Error fetching product data:', error);
-    return null;
-  }
-};
-
-
-  // Save product to Firebase với better error handling
   const saveProductToFirebase = async (product: ScannedProduct) => {
     try {
       const auth = getAuth();
@@ -531,7 +707,6 @@ export default function ScanFoodScreen() {
         dateAdded: now.toISOString(),
       };
 
-      // Thêm timeout cho Firebase operations
       const savePromise = Promise.race([
         (async () => {
           await addDoc(collection(db, 'scannedProducts'), productData);
@@ -564,7 +739,6 @@ export default function ScanFoodScreen() {
     }
   };
 
-  // Kiểm tra xem mã vạch có nằm trong khung quét không
   const isPointInScanArea = (x: number, y: number, bounds: any) => {
     const scanAreaWidth = 280;
     const scanAreaHeight = 200;
@@ -587,7 +761,6 @@ export default function ScanFoodScreen() {
   const handleBarCodeScanned = async ({ type, data, bounds }: { type: string; data: string; bounds?: any }) => {
     if (isScanning || !isMounted) return;
     
-    // Kiểm tra xem mã vạch có nằm trong khung quét không
     if (bounds && bounds.origin) {
       const centerX = bounds.origin.x + bounds.size.width / 2;
       const centerY = bounds.origin.y + bounds.size.height / 2;
@@ -631,7 +804,6 @@ export default function ScanFoodScreen() {
     }
   };
 
-  // Take photo with camera với better error handling
   const takePhoto = useCallback(async () => {
     if (!cameraRef.current || !cameraReady || !isMounted) {
       Alert.alert("Error", "Camera is not ready");
@@ -641,7 +813,6 @@ export default function ScanFoodScreen() {
     try {
       setIsLoading(true);
       
-      // Thêm timeout cho camera operation
       const photoPromise = cameraRef.current.takePictureAsync({
         quality: 0.8,
         base64: false,
@@ -656,7 +827,7 @@ export default function ScanFoodScreen() {
       
       if (photo && photo.uri && isMounted) {
         setImageUri(photo.uri);
-        console.log('Photo taken:', photo.uri);
+        console.log('📸 Photo taken:', photo.uri);
       }
       
     } catch (error) {
@@ -671,10 +842,8 @@ export default function ScanFoodScreen() {
     }
   }, [cameraReady, isMounted]);
 
-  // Pick image from library với better error handling
   const openImageLibrary = async () => {
     try {
-      // Tạm dừng camera trước khi mở image picker
       setCameraReady(false);
       
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -682,25 +851,23 @@ export default function ScanFoodScreen() {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,
-        allowsMultipleSelection: false, // Đảm bảo chỉ chọn 1 ảnh
+        allowsMultipleSelection: false,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedImage = result.assets[0];
         
-        if (!isMounted) return; // Check mounted state
+        if (!isMounted) return;
         
         setImageUri(selectedImage.uri);
-        console.log('Image selected for food recognition:', selectedImage.uri);
+        console.log('🖼️ Image selected for food recognition:', selectedImage.uri);
         
-        // Tự động analyze ngay khi chọn ảnh với delay nhỏ
         setTimeout(async () => {
           if (isMounted && selectedImage.uri) {
             await analyzeFoodImageFromLibrary(selectedImage.uri);
           }
         }, 100);
       } else {
-        // User cancelled - khôi phục camera
         if (isMounted) {
           setTimeout(() => {
             if (isMounted) {
@@ -713,7 +880,6 @@ export default function ScanFoodScreen() {
       console.error('Error opening image library:', error);
       if (isMounted) {
         Alert.alert('Error', 'Failed to open image library');
-        // Khôi phục camera khi có lỗi
         setTimeout(() => {
           if (isMounted) {
             setCameraReady(true);
@@ -723,33 +889,28 @@ export default function ScanFoodScreen() {
     }
   };
 
-  // Reset to camera view với proper cleanup
   const resetCamera = () => {
     if (!isMounted) return;
     
-    console.log('Resetting camera...');
+    console.log('🔄 Resetting camera...');
     
-    // Reset states
     setImageUri(null);
     setScannedProduct(null);
     setShowProductModal(false);
     setIsScanning(false);
-    setDetectedFoods([]);
+    setVietnameseFoodPredictions([]);
     setIsLoading(false);
     
-    // Stop animation trước khi reset
     scanLineAnim.stopAnimation();
     scanLineAnim.setValue(0);
     
-    // Reset camera với delay để tránh conflicts
     setCameraReady(false);
     
     setTimeout(() => {
       if (isMounted) {
-        console.log('Camera ready restored');
+        console.log('✅ Camera ready restored');
         setCameraReady(true);
         
-        // Restart animation nếu ở barcode mode
         if (scanMode === 'barcode') {
           setTimeout(() => {
             if (isMounted) {
@@ -774,245 +935,13 @@ export default function ScanFoodScreen() {
     }, 200);
   };
 
-  // Analyze food image from library
-  const analyzeFoodImageFromLibrary = async (uri: string) => {
-    try {
-      setIsLoading(true);
-      
-      console.log('Uploading image to Cloudinary...');
-      const uploadedImageUrl = await uploadImageToCloudinary(uri);
-      
-      if (!uploadedImageUrl) {
-        throw new Error('Failed to upload image to Cloudinary');
-      }
-      
-      console.log('Image uploaded to Cloudinary:', uploadedImageUrl);
-      console.log('Analyzing food with Roboflow...');
-      
-      const predictions = await analyzeFoodWithRoboflow(uploadedImageUrl);
-      
-      if (predictions.length === 0) {
-        Alert.alert(
-          "Manual Food Entry", 
-          "Could not automatically identify the food. Please enter the food name manually.",
-          [
-            { text: "Try Again", onPress: () => setImageUri(null) },
-            { 
-              text: "Enter Manually", 
-              onPress: () => {
-                const manualProduct: ScannedProduct = {
-                  productName: 'Unknown Food - Please Edit',
-                  calories: 100,
-                  servingSize: '100g',
-                  imageUrl: uploadedImageUrl,
-                  isFromPhoto: true,
-                  categories: 'General',
-                };
-                setScannedProduct(manualProduct);
-                setShowProductModal(true);
-              }
-            }
-          ]
-        );
-        return;
-      }
-
-      setDetectedFoods(predictions);
-      
-      // Handle fallback prediction
-      if (predictions[0].class === 'general_food') {
-        Alert.alert(
-          "Food Detected", 
-          "AI service is temporarily unavailable, but your image has been saved. Please enter food details manually.",
-          [
-            { text: "OK", onPress: () => {
-              const manualProduct: ScannedProduct = {
-                productName: 'Food Item - Please Edit Name',
-                calories: 150,
-                servingSize: '100g',
-                imageUrl: uploadedImageUrl,
-                isFromPhoto: true,
-                categories: 'General',
-              };
-              setScannedProduct(manualProduct);
-              setShowProductModal(true);
-            }}
-          ]
-        );
-        return;
-      }
-      
-      // Lấy prediction có confidence cao nhất
-      const topPrediction = predictions.reduce((prev, current) => 
-        prev.confidence > current.confidence ? prev : current
-      );
-
-      console.log('Top prediction:', topPrediction);
-
-      // Tra cứu calories từ database
-      const foodName = topPrediction.class.toLowerCase();
-      const calorieInfo = foodCalorieDatabase[foodName] || { 
-        calories: 100, 
-        servingSize: '100g',
-        category: 'General'
-      };
-
-      const detectedProduct: ScannedProduct = {
-        productName: topPrediction.class,
-        calories: calorieInfo.calories,
-        servingSize: calorieInfo.servingSize,
-        imageUrl: uploadedImageUrl,
-        isFromPhoto: true,
-        categories: calorieInfo.category,
-      };
-
-      setScannedProduct(detectedProduct);
-      setShowProductModal(true);
-      
-    } catch (error) {
-      console.error('Error analyzing food from library:', error);
-      
-      if (error.message === 'API_KEY_INVALID') {
-        Alert.alert(
-          "Service Temporarily Unavailable", 
-          "AI food recognition is currently unavailable. You can still save your food manually.",
-          [
-            { text: "Cancel", onPress: () => setImageUri(null) },
-            { 
-              text: "Continue Manually", 
-              onPress: async () => {
-                try {
-                  const uploadedImageUrl = await uploadImageToCloudinary(uri);
-                  const manualProduct: ScannedProduct = {
-                    productName: 'Food Item - Please Edit',
-                    calories: 100,
-                    servingSize: '100g',
-                    imageUrl: uploadedImageUrl || uri,
-                    isFromPhoto: true,
-                    categories: 'General',
-                  };
-                  setScannedProduct(manualProduct);
-                  setShowProductModal(true);
-                } catch (uploadError) {
-                  Alert.alert("Error", "Could not process the image. Please try again.");
-                  setImageUri(null);
-                }
-              }
-            }
-          ]
-        );
-      } else {
-        Alert.alert(
-          "Analysis Failed", 
-          "Could not analyze the image. Please check your internet connection and try again.",
-          [
-            { text: "Try Again", onPress: () => setImageUri(null) },
-            { text: "OK" }
-          ]
-        );
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Analyze food image from camera
-  const analyzeFoodImage = async () => {
-    if (!imageUri) return;
-
-    try {
-      setIsLoading(true);
-      
-      console.log('Uploading camera image to Cloudinary...');
-      const uploadedImageUrl = await uploadImageToCloudinary(imageUri);
-      
-      if (!uploadedImageUrl) {
-        throw new Error('Failed to upload image to Cloudinary');
-      }
-      
-      console.log('Camera image uploaded to Cloudinary:', uploadedImageUrl);
-      
-      const predictions = await analyzeFoodWithRoboflow(uploadedImageUrl);
-      
-      if (predictions.length === 0) {
-        Alert.alert(
-          "No Food Detected", 
-          "Could not identify food in this image. You can still save it manually with estimated calories.",
-          [
-            { text: "Retake Photo", onPress: () => resetCamera() },
-            { 
-              text: "Save Anyway", 
-              onPress: () => {
-                const manualProduct: ScannedProduct = {
-                  productName: 'Unknown Food',
-                  calories: 100,
-                  servingSize: '100g',
-                  imageUrl: uploadedImageUrl,
-                  isFromPhoto: true,
-                  categories: 'General',
-                };
-                setScannedProduct(manualProduct);
-                setShowProductModal(true);
-              }
-            }
-          ]
-        );
-        return;
-      }
-
-      setDetectedFoods(predictions);
-      
-      const topPrediction = predictions.reduce((prev, current) => 
-        prev.confidence > current.confidence ? prev : current
-      );
-
-      const foodName = topPrediction.class.toLowerCase();
-      const calorieInfo = foodCalorieDatabase[foodName] || { 
-        calories: 100, 
-        servingSize: '100g',
-        category: 'General'
-      };
-
-      const detectedProduct: ScannedProduct = {
-        productName: topPrediction.class,
-        calories: calorieInfo.calories,
-        servingSize: calorieInfo.servingSize,
-        imageUrl: uploadedImageUrl,
-        isFromPhoto: true,
-        categories: calorieInfo.category,
-      };
-
-      setScannedProduct(detectedProduct);
-      setShowProductModal(true);
-      
-    } catch (error) {
-      console.error('Error analyzing camera food:', error);
-      Alert.alert(
-        "Analysis Failed", 
-        "Could not analyze the image. Please check your internet connection and try again.",
-        [
-          { text: "Retake Photo", onPress: () => resetCamera() },
-          { text: "OK" }
-        ]
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-
-  // Switch scan mode với proper cleanup
   const switchScanMode = () => {
-    console.log(`Switching from ${scanMode} to ${scanMode === 'photo' ? 'barcode' : 'photo'}`);
+    console.log(`🔄 Switching from ${scanMode} to ${scanMode === 'photo' ? 'barcode' : 'photo'}`);
     
-    // Stop current animation
     scanLineAnim.stopAnimation();
     scanLineAnim.setValue(0);
     
-    // Switch mode
     setScanMode(scanMode === 'photo' ? 'barcode' : 'photo');
-    
-    // Reset camera with proper cleanup
     resetCamera();
   };
 
@@ -1043,7 +972,6 @@ export default function ScanFoodScreen() {
     <View style={styles.container}>
       {!imageUri ? (
         <>
-          {/* Camera View - KHÔNG CÓ CHILDREN */}
           <CameraView
             ref={cameraRef}
             style={styles.camera}
@@ -1055,9 +983,7 @@ export default function ScanFoodScreen() {
             }}
           />
 
-          {/* Camera Overlay - ABSOLUTE POSITIONING */}
           <View style={styles.cameraOverlay}>
-            {/* Top Controls */}
             <View style={styles.topControls}>
               <TouchableOpacity 
                 style={styles.modeButton} 
@@ -1086,7 +1012,6 @@ export default function ScanFoodScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Scanning Frame */}
             <View style={styles.scanningFrame}>
               {scanMode === 'barcode' && (
                 <View style={styles.scanningArea}>
@@ -1095,7 +1020,6 @@ export default function ScanFoodScreen() {
                   <View style={[styles.corner, styles.cornerBottomLeft]} />
                   <View style={[styles.corner, styles.cornerBottomRight]} />
                   
-                  {/* Animated scan line chỉ hiển thị khi ở chế độ barcode */}
                   <Animated.View
                     style={[
                       styles.scanLine,
@@ -1114,15 +1038,13 @@ export default function ScanFoodScreen() {
                 </View>
               )}
               
-              <Text style={styles.scanningText}>
-                {scanMode === 'photo' 
-                  ? 'Position food in the frame' 
-                  : 'Align barcode within the frame'
-                }
-              </Text>
+              {scanMode === 'barcode' && (
+                <Text style={styles.scanningText}>
+                  Align barcode within the frame
+                </Text>
+              )}
             </View>
 
-            {/* Bottom Controls */}
             <View style={styles.bottomControls}>
               {scanMode === 'photo' && (
                 <TouchableOpacity 
@@ -1151,17 +1073,14 @@ export default function ScanFoodScreen() {
         </>
       ) : (
         <>
-          {/* Image Preview */}
           <Image source={{ uri: imageUri }} style={styles.previewImage} />
           
-          {/* Preview Overlay */}
           <View style={styles.previewOverlay}>
             <TouchableOpacity style={styles.backButton} onPress={resetCamera}>
               <Ionicons name="arrow-back" size={28} color="white" />
             </TouchableOpacity>
           </View>
 
-          {/* Result Card */}
           <View style={styles.resultCard}>
             <View style={styles.foodInfoRow}>
               <Image
@@ -1169,9 +1088,9 @@ export default function ScanFoodScreen() {
                 style={styles.foodImage}
               />
               <View style={styles.foodInfo}>
-                <Text style={styles.resultText}>Analyze this food image</Text>
+                <Text style={styles.resultText}>🍜 Analyze Food</Text>
                 <Text style={styles.resultSubtext}>
-                  Tap to identify food and get calorie information
+                  AI will identify Vietnamese dishes and provide nutrition info
                 </Text>
               </View>
             </View>
@@ -1191,7 +1110,7 @@ export default function ScanFoodScreen() {
         </>
       )}
 
-      {/* Product Details Modal */}
+      {/* Enhanced Product Details Modal for Vietnamese Food */}
       <Modal
         visible={showProductModal}
         animationType="slide"
@@ -1204,7 +1123,8 @@ export default function ScanFoodScreen() {
               <Ionicons name="close" size={28} color="#333" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
-              {scannedProduct?.isFromPhoto ? 'Detected Food' : 'Product Details'}
+              {scannedProduct?.isVietnameseFood ? 'Food Detected' : 
+               scannedProduct?.isFromPhoto ? 'Detected Food' : 'Product Details'}
             </Text>
             <View style={{ width: 28 }} />
           </View>
@@ -1212,7 +1132,6 @@ export default function ScanFoodScreen() {
           <ScrollView style={styles.modalContent}>
             {scannedProduct && (
               <>
-                {/* Product Image */}
                 {scannedProduct.imageUrl ? (
                   <Image 
                     source={{ uri: scannedProduct.imageUrl }} 
@@ -1224,24 +1143,22 @@ export default function ScanFoodScreen() {
                   </View>
                 )}
 
-                {/* Product Info */}
                 <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{scannedProduct.productName}</Text>
+                  <Text style={styles.productName}>
+                    {scannedProduct.productName}
+                  </Text>
+                  
                   {scannedProduct.brand && (
                     <Text style={styles.productBrand}>{scannedProduct.brand}</Text>
                   )}
+                  
                   {scannedProduct.barcode && (
                     <Text style={styles.productBarcode}>Barcode: {scannedProduct.barcode}</Text>
                   )}
                   
-                  {/* Show confidence for AI detection */}
-                  {scannedProduct.isFromPhoto && detectedFoods.length > 0 && (
-                    <Text style={styles.productBarcode}>
-                      Confidence: {Math.round(detectedFoods[0].confidence * 100)}%
-                    </Text>
-                  )}
+                 
                   
-                  {/* Nutri-Score */}
+                  {/* Nutri-Score for barcode products */}
                   {scannedProduct.nutriScore && scannedProduct.nutriScore !== 'unknown' && (
                     <View style={styles.nutriScoreContainer}>
                       <Text style={styles.nutriScoreLabel}>Nutri-Score: </Text>
@@ -1254,91 +1171,137 @@ export default function ScanFoodScreen() {
                   {/* Nutrition Facts */}
                   <View style={styles.nutritionSection}>
                     <Text style={styles.sectionTitle}>
-                      Nutrition Facts ({showPerServing ? 'per serving' : 'per 100g'} - {scannedProduct.servingSize})
+                      🍽️ Nutrition Facts ({showPerServing ? 'per serving' : 'per 100g'} - {scannedProduct.servingSize})
                     </Text>
-                    <Text style={styles.nutritionItem}>
-                    Calories: 
-                    {showPerServing 
-                      ? scannedProduct.caloriesPerServing?.toFixed(0) ?? 'N/A' 
-                      : scannedProduct.caloriesPer100g?.toFixed(0) ?? 'N/A'}
-                    </Text>
-                    /* change the default setting calorie*/
+                    
                     <TouchableOpacity onPress={() => setShowPerServing(!showPerServing)}>
-                    <Text style={{ color: 'blue', marginBottom: 10 }}>
+                      <Text style={{ color: 'blue', marginBottom: 10 }}>
                         {showPerServing ? 'Switch to per 100g' : 'Switch to per serving'}
-                    </Text>
+                      </Text>
                     </TouchableOpacity>
 
-                    {scannedProduct.isFromPhoto ? (
-                      // Simplified nutrition for photo-detected foods
+                    {scannedProduct.isVietnameseFood || scannedProduct.isFromPhoto ? (
+                      // Enhanced nutrition for Vietnamese food
                       <View style={styles.nutritionGrid}>
                         <View style={styles.nutritionItemCard}>
                           <Ionicons name="flame" size={24} color="#FF6B35" style={styles.nutritionIcon} />
                           <Text style={styles.nutritionLabel}>Calories</Text>
                           <AnimatedNutritionValue value={scannedProduct.calories} suffix=" kcal" duration={2000} />
                         </View>
+                        
+                        {scannedProduct.nutrients && (
+                          <>
+                            <View style={styles.nutritionItemCard}>
+                              <Ionicons name="fitness" size={24} color="#4CAF50" style={styles.nutritionIcon} />
+                              <Text style={styles.nutritionLabel}>Protein</Text>
+                              <AnimatedNutritionValue 
+                                value={showPerServing ? scannedProduct.nutrientsPerServing?.protein ?? 0 : scannedProduct.nutrients.protein} 
+                                suffix="g" 
+                                duration={2000} 
+                              />
+                            </View>
+                            
+                            <View style={styles.nutritionItemCard}>
+                              <Ionicons name="leaf" size={24} color="#2196F3" style={styles.nutritionIcon} />
+                              <Text style={styles.nutritionLabel}>Carbs</Text>
+                              <AnimatedNutritionValue 
+                                value={showPerServing ? scannedProduct.nutrientsPerServing?.carbs ?? 0 : scannedProduct.nutrients.carbs} 
+                                suffix="g" 
+                                duration={2000} 
+                              />
+                            </View>
+                            
+                            <View style={styles.nutritionItemCard}>
+                              <Ionicons name="pizza" size={24} color="#FF9800" style={styles.nutritionIcon} />
+                              <Text style={styles.nutritionLabel}>Fat</Text>
+                              <AnimatedNutritionValue 
+                                value={showPerServing ? scannedProduct.nutrientsPerServing?.fat ?? 0 : scannedProduct.nutrients.fat} 
+                                suffix="g" 
+                                duration={2000} 
+                              />
+                            </View>
+                          </>
+                        )}
                       </View>
                     ) : (
                       // Full nutrition for barcode-scanned products
-                     <View style={styles.nutritionGrid}>
-                    {[
-                      {
-                        label: 'Calories', rawValue: showPerServing ? scannedProduct.caloriesPerServing ?? 0 : scannedProduct.caloriesPer100g ?? 0,
-                        icon: 'flame', suffix: ' kcal',
-                      },
-                      {
-                        label: 'Fat', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.fat ?? 0 : scannedProduct.nutrients?.fat ?? 0,
-                        icon: 'pizza', suffix: 'g',
-                      },
-                      {
-                        label: 'Carbs', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.carbs ?? 0 : scannedProduct.nutrients?.carbs ?? 0,
-                        icon: 'leaf', suffix: 'g',
-                      },
-                      {
-                        label: 'Protein', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.protein ?? 0 : scannedProduct.nutrients?.protein ?? 0,
-                        icon: 'fitness', suffix: 'g',
-                      },
-                      {
-                        label: 'Sugar', rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.sugar ?? 0 : scannedProduct.nutrients?.sugar ?? 0,
-                        icon: 'ice-cream', suffix: 'g',
-                      },
-                      {
-                        label: 'Fiber',
-                        rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.fiber ?? 0 : scannedProduct.nutrients?.fiber ?? 0,
-                        icon: 'barbell', suffix: 'g',
-                      },
-                    ].map((item, index) => (
-                      <View key={index} style={styles.nutritionItemCard}>
-                        <Ionicons name={item.icon as any} size={24} color="#4CAF50" style={styles.nutritionIcon} />
-                        <Text style={styles.nutritionLabel}>{item.label}</Text>
-                        <AnimatedNutritionValue value={item.rawValue} suffix={item.suffix} duration={2000} />
+                      <View style={styles.nutritionGrid}>
+                        {[
+                          {
+                            label: 'Calories', 
+                            rawValue: showPerServing ? scannedProduct.caloriesPerServing ?? 0 : scannedProduct.caloriesPer100g ?? 0,
+                            icon: 'flame', 
+                            suffix: ' kcal',
+                            color: '#FF6B35'
+                          },
+                          {
+                            label: 'Fat', 
+                            rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.fat ?? 0 : scannedProduct.nutrients?.fat ?? 0,
+                            icon: 'pizza', 
+                            suffix: 'g',
+                            color: '#FF9800'
+                          },
+                          {
+                            label: 'Carbs', 
+                            rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.carbs ?? 0 : scannedProduct.nutrients?.carbs ?? 0,
+                            icon: 'leaf', 
+                            suffix: 'g',
+                            color: '#2196F3'
+                          },
+                          {
+                            label: 'Protein', 
+                            rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.protein ?? 0 : scannedProduct.nutrients?.protein ?? 0,
+                            icon: 'fitness', 
+                            suffix: 'g',
+                            color: '#4CAF50'
+                          },
+                          {
+                            label: 'Sugar', 
+                            rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.sugar ?? 0 : scannedProduct.nutrients?.sugar ?? 0,
+                            icon: 'ice-cream', 
+                            suffix: 'g',
+                            color: '#E91E63'
+                          },
+                          {
+                            label: 'Fiber',
+                            rawValue: showPerServing ? scannedProduct.nutrientsPerServing?.fiber ?? 0 : scannedProduct.nutrients?.fiber ?? 0,
+                            icon: 'barbell', 
+                            suffix: 'g',
+                            color: '#795548'
+                          },
+                        ].map((item, index) => (
+                          <View key={index} style={styles.nutritionItemCard}>
+                            <Ionicons name={item.icon as any} size={24} color={item.color} style={styles.nutritionIcon} />
+                            <Text style={styles.nutritionLabel}>{item.label}</Text>
+                            <AnimatedNutritionValue value={item.rawValue} suffix={item.suffix} duration={2000} />
+                          </View>
+                        ))}
                       </View>
-                    ))}
-                  </View>
                     )}
                   </View>
 
                   {/* Ingredients */}
                   {scannedProduct.ingredients && (
                     <View style={styles.ingredientsSection}>
-                      <Text style={styles.sectionTitle}>Ingredients</Text>
+                      <Text style={styles.sectionTitle}>🥬 Ingredients</Text>
                       <Text style={styles.ingredientsText}>{scannedProduct.ingredients}</Text>
                     </View>
                   )}
                 </View>
 
-                {/* Save Button */}
+                {/* Enhanced Save Button */}
                 <TouchableOpacity 
-                  style={styles.saveButton}
+                  style={[styles.saveButton, scannedProduct.isVietnameseFood && styles.vietnameseSaveButton]}
                   onPress={() => {
                     saveProductToFirebase(scannedProduct);
                     setShowProductModal(false);
-
                     navigation.navigate('History', { refresh: Date.now() });
                     resetCamera();
                   }}
                 >
-                  <Text style={styles.saveButtonText}>Save to My Foods</Text>
+                  <Text style={styles.saveButtonText}>
+                    {scannedProduct.isVietnameseFood ? 'Save Food' : '💾 Save to My Foods'}
+                  </Text>
                 </TouchableOpacity>
               </>
             )}

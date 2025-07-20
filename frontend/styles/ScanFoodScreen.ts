@@ -363,7 +363,7 @@ export const styles = StyleSheet.create({
   },
   nutritionItemCard: {
     width: '30%',
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 8,
@@ -376,18 +376,22 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     // Elevation for Android
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   nutritionLabel: {
     fontSize: 14,
-    color: '#888',
+    color: '#555',
     fontWeight: '600',
     marginBottom: 4,
+    textAlign: 'center',
   },
   nutritionValue: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
     marginTop: 4,
+    textAlign: 'center',
   },
   nutritionItem: {
     width: '48%',
@@ -404,6 +408,21 @@ export const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20,
   },
+  // New category section styles for Vietnamese food
+  categorySection: {
+    marginBottom: 20,
+  },
+  categoryText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+    backgroundColor: '#f0f8ff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  // Save button styles
   saveButton: {
     backgroundColor: '#FF6B35',
     paddingVertical: 16,
@@ -416,9 +435,59 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  vietnameseSaveButton: {
+    backgroundColor: '#FF6B35',
+    shadowColor: '#FF6B35',
+    shadowOpacity: 0.3,
+  },
   saveButtonText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  // Confidence display styles for Vietnamese food
+  confidenceContainer: {
+    backgroundColor: '#e8f5e8',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignSelf: 'flex-start',
+  },
+  confidenceText: {
+    fontSize: 14,
+    color: '#2e7d32',
+    fontWeight: '600',
+  },
+  // Alternative predictions styles
+  alternativePredictions: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+  },
+  alternativeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  alternativeItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  alternativeName: {
+    fontSize: 14,
+    color: '#555',
+    flex: 1,
+  },
+  alternativeConfidence: {
+    fontSize: 12,
+    color: '#888',
     fontWeight: '600',
   },
   // Additional styles that might be needed
@@ -441,5 +510,47 @@ export const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginRight: 12,
+  },
+  // Error state styles
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#c62828',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  // Loading overlay styles
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  loadingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 12,
+  },
+  loadingSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
   },
 });
