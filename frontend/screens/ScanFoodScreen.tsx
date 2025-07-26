@@ -130,7 +130,16 @@ interface ScannedProduct {
 type ScanMode = 'photo' | 'barcode';
 
 
+<<<<<<< HEAD
   const VIETNAMESE_FOOD_API_URL = 'http://192.168.1.2:5000'; 
+=======
+  return { calculatePortionNutrition };
+};
+
+
+
+const VIETNAMESE_FOOD_API_URL = 'http://192.168.2.51:5000';
+>>>>>>> 3350cd9 (Fix factor, portion)
 // const VIETNAMESE_FOOD_API_URL = 'https://vietnamese-food-classifier-api-production.up.railway.app';
 
 
@@ -691,6 +700,7 @@ export default function ScanFoodScreen() {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
+<<<<<<< HEAD
       
       if (!user) {
         Alert.alert('Error', 'User not authenticated');
@@ -736,6 +746,22 @@ export default function ScanFoodScreen() {
       if (isMounted) {
         Alert.alert('Error', 'Failed to save food. Please try again.');
       }
+=======
+      if (!user) { Alert.alert('Error', 'User not authenticated'); return; }
+      if (!isMounted) return;
+      const now = new Date();
+      const productData = { ...product, userId: user.uid, scannedAt: now.toISOString(), dateAdded: now.toISOString() };
+      await Promise.race([(async () => {
+        await addDoc(collection(db, 'scannedProducts'), productData);
+        const today = now.toISOString().split('T')[0];
+        const diaryRef = doc(db, 'foodDiary', `${user.uid}_${today}`);
+        await setDoc(diaryRef, { userId: user.uid, date: today, foods: arrayUnion(productData), updatedAt: now.toISOString() }, { merge: true });
+      })(), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))]);
+      if (isMounted) Alert.alert('Success', 'Food saved successfully!');
+    } catch (error) {
+      console.error('Error saving product:', error);
+      if (isMounted) Alert.alert('Error', 'Failed to save food. Try again.');
+>>>>>>> 3350cd9 (Fix factor, portion)
     }
   };
 
@@ -1220,6 +1246,13 @@ export default function ScanFoodScreen() {
                                 duration={2000} 
                               />
                             </View>
+<<<<<<< HEAD
+=======
+                            <View style={styles.nutritionItemCard}><Ionicons name="leaf" size={24} color="#2196F3" style={styles.nutritionIcon} /><Text style={styles.nutritionLabel}>Carbs</Text>
+                            <AnimatedNutritionValue value={showPerServing ? scannedProduct.nutrientsPerServing?.protein ?? 0 : scannedProduct.nutrients.protein} suffix="g" duration={2000} />
+                            </View>
+                            <View style={styles.nutritionItemCard}><Ionicons name="pizza" size={24} color="#FF9800" style={styles.nutritionIcon} /><Text style={styles.nutritionLabel}>Fat</Text><AnimatedNutritionValue value={showPerServing ? scannedProduct.nutrientsPerServing?.fat ?? 0 : scannedProduct.nutrients.fat} suffix="g" duration={2000} /></View>
+>>>>>>> 3350cd9 (Fix factor, portion)
                           </>
                         )}
                       </View>
