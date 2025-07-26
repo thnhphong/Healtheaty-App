@@ -151,7 +151,7 @@ export default function ScanFoodScreen() {
   
   const scanLineAnim = useRef(new Animated.Value(0)).current;
   const navigation = useNavigation<NavigationProps>();
-
+  const VIETNAMESE_FOOD_API_URL = 'http://10.11.73.47:8000';
   // ==========================================
   // 🍜 VIETNAMESE FOOD API FUNCTIONS
   // ==========================================
