@@ -430,7 +430,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     {new Date(item.scannedAt || item.dateAdded).toLocaleTimeString('en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
-                      hour12: true
+                      hour12: true,
                     })}
         </Text>
           </View>
@@ -589,56 +589,87 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
        {/* Meal Details Modal */}
       <Modal
-        visible={showProductModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowProductModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowProductModal(false)}>
-              <Ionicons name="close" size={28} color="#333" />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Meal Details</Text>
-            <View style={{ width: 28 }} />
+  visible={showProductModal}
+  animationType="slide"
+  presentationStyle="pageSheet"
+  onRequestClose={() => setShowProductModal(false)}
+>
+  <View style={styles.modalContainer}>
+
+    <ScrollView 
+      style={styles.modalContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {scannedProduct && (
+        <>
+          {/* Enhanced Image Container */}
+          <View style={styles.imageContainer}>
+            {scannedProduct.imageUrl ? (
+              <Image
+                source={{ uri: scannedProduct.imageUrl }}
+                style={styles.productImage}
+              />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Ionicons name="image-outline" size={48} color="#ccc" />
+              </View>
+            )}
+            {/* Floating Calorie Badge */}
+            <View style={styles.calorieBadge}>
+              <Text style={styles.calorieNumber}>{scannedProduct.calories}</Text>
+              <Text style={styles.calorieUnit}>kcal</Text>
+            </View>
           </View>
 
-          <ScrollView style={styles.modalContent}>
-            {scannedProduct && (
-              <>
-                {scannedProduct.imageUrl ? (
-                  <Image
-                    source={{ uri: scannedProduct.imageUrl }}
-                    style={styles.productImage}
-                  />
-                ) : (
-                  <View style={styles.placeholderImage}>
-                    <Ionicons name="image-outline" size={48} color="#ccc" />
-                  </View>
-                )}
-
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{scannedProduct.productName}</Text>
-                  {scannedProduct.brand && (
-                    <Text style={styles.productBrand}>{scannedProduct.brand}</Text>
-                  )}
-                  <Text style={styles.productServing}>{scannedProduct.servingSize}</Text>
-                  <Text style={styles.productCalories}>
-                    Calories: {scannedProduct.calories} kcal
-                  </Text>
+          {/* Enhanced Product Info Card */}
+          <View style={styles.productInfoCard}>
+            <View style={styles.productHeader}>
+              <Text style={styles.productName}>{scannedProduct.productName}</Text>
+              {scannedProduct.brand && (
+                <View style={styles.brandBadge}>
                 </View>
+                
+              )}
+            </View>
+            <Text style={styles.productBrand}>{scannedProduct.brand}</Text>
+            <Text style={styles.productServing}>{scannedProduct.servingSize}</Text>
 
-                <TouchableOpacity
-                  style={styles.modalCloseButton}
-                  onPress={() => setShowProductModal(false)}
-                >
-                  <Text style={styles.modalCloseButtonText}>Close</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </ScrollView>
-        </View>
-      </Modal>
+            {/* Nutrition Quick Stats */}
+            <View style={styles.nutritionStats}>
+              <View style={styles.statItem}>
+                <Ionicons name="flame" size={20} color="#ff6b6b" />
+                <Text style={styles.statValue}>{scannedProduct.calories}</Text>
+                <Text style={styles.statLabel}>Calories</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="fitness" size={20} color="#4ecdc4" />
+                <Text style={styles.statValue}>12g</Text>
+                <Text style={styles.statLabel}>Protein</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="leaf" size={20} color="#95e1d3" />
+                <Text style={styles.statValue}>8g</Text>
+                <Text style={styles.statLabel}>Carbs</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="water" size={20} color="#f38ba8" />
+                <Text style={styles.statValue}>5g</Text>
+                <Text style={styles.statLabel}>Fat</Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity style={styles.shareButton}>
+                <Ionicons name="share-outline" size={20} color="#667eea" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      )}
+    </ScrollView>
+  </View>
+</Modal>
     </SafeAreaView>
   );
 };

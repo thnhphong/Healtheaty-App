@@ -22,6 +22,7 @@ import { LineChart } from 'react-native-chart-kit';
 import BottomNavigation from '../components/ui/BottomNavigation';
 import { styles } from '../styles/HistoryScreenStyles';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { setDoc, arrayUnion } from 'firebase/firestore';
 
 
 type RootStackParamList = {
@@ -260,10 +261,43 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigation }) => {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Add',
-          onPress: () => {
-            // Navigate to home and trigger re-add logic
-            navigation.navigate('Home');
-            // You can implement re-add logic here
+          onPress: async () => {
+            try{
+              const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (!user) {
+              Alert.alert('Error', 'User not authenticated');
+              return;
+            }
+
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            const diaryRef = doc(db, 'foodDiary', `${user.uid}_${today}`);
+
+            // Prepare the item data for Firebase
+            const mealItem = {
+              ...item,
+              userId: user.uid,
+              dateAdded: new Date().toISOString(),
+              scannedAt: new Date().toISOString(),
+            };
+            await setDoc(
+              diaryRef,
+              {
+                userId: user.uid,
+                date: today,
+                foods: arrayUnion(mealItem),
+                updatedAt: new Date().toISOString(),
+              },
+              { merge: true },  // Merge to avoid overwriting existing data
+            );
+              setMealHistory(prev => [mealItem, ...prev]);
+              Alert.alert('Success', 'Meal added to today\'s log');
+            }catch (error) {
+              console.error('Error re-adding meal:', error);
+              Alert.alert('Error', 'Failed to add meal to log. Please try again.');
+            }
           }
         }
       ]
