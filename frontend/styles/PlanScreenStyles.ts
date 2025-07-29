@@ -119,6 +119,12 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   goalIcon: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
     fontSize: 24,
     marginRight: 12,
   },
@@ -327,4 +333,56 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  actionButtonsContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 12,
+  },
+  savePlanButton: {
+    backgroundColor: '#10B981',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+ loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+
+  // Existing plan view
+  deleteButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#FEF2F2',
+  },
+  currentGoalSection: {
+    paddingHorizontal: 4,
+    marginBottom: 24,
+  },
+  goalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  createNewButton: {
+    backgroundColor: '#3B82F6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

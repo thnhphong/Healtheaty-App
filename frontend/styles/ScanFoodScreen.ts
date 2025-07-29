@@ -353,7 +353,7 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: 4,
   },
   nutritionGrid: {
     flexDirection: 'row',

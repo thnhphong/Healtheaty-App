@@ -202,15 +202,16 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Gender</Text>
+                    <Text style={styles.label}>Gender</Text>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={userInfo.gender}
-              onValueChange={(value) => handleInputChange('gender', value)}
+              onValueChange={(itemValue) => handleInputChange('gender', itemValue)}
               style={styles.picker}
+              mode="dropdown" // Add this for better visibility on Android
             >
-              <Picker.Item label="Male" value="male" />
-              <Picker.Item label="Female" value="female" />
+              <Picker.Item label="Male" value="male" color="black" />
+              <Picker.Item label="Female" value="female" color="black" />
             </Picker>
           </View>
 
@@ -234,23 +235,24 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
             keyboardType="numeric"
           />
 
-          <Text style={styles.label}>Activity Level</Text>
+         <Text style={styles.label}>Activity Level</Text>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={userInfo.activityFactor}
-              onValueChange={(value) => handleInputChange('activityFactor', value)}
+              onValueChange={(itemValue) => handleInputChange('activityFactor', itemValue)}
               style={styles.picker}
+              mode="dropdown" // Add this for better visibility on Android
             >
               {activityLevels.map((level) => (
                 <Picker.Item
                   key={level.value}
                   label={level.label}
                   value={level.value}
+                  color="#000" // Ensure text is visible
                 />
               ))}
             </Picker>
           </View>
-
           <TouchableOpacity 
             style={[styles.submitButton, loading && styles.disabledButton]}
             onPress={handleSubmit}

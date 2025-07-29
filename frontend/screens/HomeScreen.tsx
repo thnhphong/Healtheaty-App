@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
-  ActivityIndicator 
+  ActivityIndicator, 
+  Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
@@ -87,6 +88,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mealLog, setMealLog] = useState<ScannedProduct[]>([]);
   const [isLoadingMeals, setIsLoadingMeals] = useState(false);
+
+  /* meal log */
+  const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -388,7 +393,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
   const renderMealItem = ({ item }: { item: ScannedProduct }) => (
-    <View style={styles.mealItem}>
+    <TouchableOpacity style={styles.mealItem}
+      onPress={() => {
+        setScannedProduct(item); // Set the clicked meal as the selected product
+        setShowProductModal(true); // Show the existing product modal
+      }}
+    >
       <View style={styles.mealItemContent}>
         {item.imageUrl ? (
           <Image source={{ uri: item.imageUrl }} style={styles.mealItemImage} />
@@ -416,14 +426,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <Text style={[styles.mealItemTagText, { color: '#2196F3' }]}>Barcode</Text>
               </View>
             )}
+            <Text style={styles.mealItemDate}>
+                    {new Date(item.scannedAt || item.dateAdded).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+        </Text>
           </View>
         </View>
         <View style={styles.mealItemCalories}>
           <Text style={styles.mealItemCalorieNumber}>{item.calories}</Text>
           <Text style={styles.mealItemCalorieLabel}>kcal</Text>
         </View>
+        
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const getSelectedDateString = (): string => {
@@ -568,6 +586,59 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       </ScrollView>
        {/* Bottom Navigation */}
        <BottomNavigation navigation={navigation} />
+
+       {/* Meal Details Modal */}
+      <Modal
+        visible={showProductModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowProductModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowProductModal(false)}>
+              <Ionicons name="close" size={28} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Meal Details</Text>
+            <View style={{ width: 28 }} />
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {scannedProduct && (
+              <>
+                {scannedProduct.imageUrl ? (
+                  <Image
+                    source={{ uri: scannedProduct.imageUrl }}
+                    style={styles.productImage}
+                  />
+                ) : (
+                  <View style={styles.placeholderImage}>
+                    <Ionicons name="image-outline" size={48} color="#ccc" />
+                  </View>
+                )}
+
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>{scannedProduct.productName}</Text>
+                  {scannedProduct.brand && (
+                    <Text style={styles.productBrand}>{scannedProduct.brand}</Text>
+                  )}
+                  <Text style={styles.productServing}>{scannedProduct.servingSize}</Text>
+                  <Text style={styles.productCalories}>
+                    Calories: {scannedProduct.calories} kcal
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setShowProductModal(false)}
+                >
+                  <Text style={styles.modalCloseButtonText}>Close</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

@@ -212,7 +212,7 @@ export const styles = StyleSheet.create({
   mealItemImage: {
     width: 50,
     height: 50,
-    borderRadius: 8,
+    borderRadius: 12,
     marginRight: 12,
   },
   mealItemImagePlaceholder: {
@@ -296,6 +296,84 @@ export const styles = StyleSheet.create({
   },
   calendarDaySelectedText: {
     color: '#fff',
+    fontWeight: 'bold',
+  },
+  mealItemDate: {
+    position: 'absolute',
+    top: 8,
+    right: -28,
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '700',
+    fontStyle: 'italic',
+  },
+  /* modal shown for meal log item */
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalContent: {
+    padding: 15,
+  },
+  productImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  placeholderImage: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  productInfo: {
+    marginBottom: 15,
+  },
+  productName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  productBrand: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 5,
+  },
+  productServing: {
+    fontSize: 14,
+    color: '#999',
+    marginBottom: 5,
+  },
+  productCalories: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ff6b6b',
+  },
+  modalCloseButton: {
+    backgroundColor: '#ff6b6b',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    color: 'white',
     fontWeight: 'bold',
   },
 });
