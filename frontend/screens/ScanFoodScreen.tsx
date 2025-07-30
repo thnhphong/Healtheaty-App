@@ -171,8 +171,6 @@ const usePortionCalculator = (scannedProduct: ScannedProduct | null, currentPort
   return { calculatePortionNutrition };
 };
 
-
-
 const VIETNAMESE_FOOD_API_URL = 'http://192.168.2.51:5000';
 // const VIETNAMESE_FOOD_API_URL = 'https://vietnamese-food-classifier-api-production.up.railway.app';
 
@@ -195,7 +193,6 @@ export default function ScanFoodScreen() {
   const [showPerServing, setShowPerServing] = useState(true);
   const [selectedPortion, setSelectedPortion] = useState<number>(1);
   
-
   //portion state with better defaults
   const [showPortionEditor, setShowPortionEditor] = useState(false);
   const [currentPortion, setCurrentPortion] = useState<PortionData>({
@@ -230,13 +227,18 @@ export default function ScanFoodScreen() {
     }
   }
 }
-
    //handle portion editor apply
   const handlePortionApply = (portionData) => {
-  setCurrentPortion(portionData);
-  // Force a re-render by updating a state that affects the key
-  setShowPerServing(prev => prev); // This triggers a re-render
-}
+  setCurrentPortion({
+    type: portionData.type,
+    servingCount: portionData.servingCount,
+    customSize: portionData.customSize,
+    displayText: portionData.displayText,
+    multiplier: portionData.multiplier
+  });
+  setShowPortionEditor(false);
+  console.log('Portion applied:', portionData);
+};
 
   // 🍜 VIETNAMESE FOOD API FUNCTIONS
   const analyzeVietnameseFood = async (imageUri: string): Promise<VietnameseFoodAPIResponse> => {
@@ -580,54 +582,81 @@ export default function ScanFoodScreen() {
   return baseValue * portionFactor * count;
   };
 
-  const createPortionAdjustedProduct = (originalProduct, portion) => {
-  // Calculate adjusted nutrition values
-  const adjustedCalories = calculatePortionNutrition(
-    originalProduct.caloriesPer100g || originalProduct.calories, 
-    'per100g'
-  );
+  const createPortionAdjustedProduct = (product, portion) => {
+  const adjustedProduct = { ...product };
   
-  const adjustedNutrients = originalProduct.nutrients ? {
-    fat: calculatePortionNutrition(originalProduct.nutrients.fat, 'per100g'),
-    carbs: calculatePortionNutrition(originalProduct.nutrients.carbs, 'per100g'),
-    protein: calculatePortionNutrition(originalProduct.nutrients.protein, 'per100g'),
-    sugar: calculatePortionNutrition(originalProduct.nutrients.sugar, 'per100g'),
-    fiber: calculatePortionNutrition(originalProduct.nutrients.fiber, 'per100g'),
-    salt: calculatePortionNutrition(originalProduct.nutrients.salt, 'per100g'),
-  } : null;
-
-  // Create the adjusted product object
-  const adjustedProduct = {
-    ...originalProduct,
-    // Update calories to the portion-adjusted amount
-    calories: Math.round(adjustedCalories),
+  if (portion.type === 'per100g') {
+    // Calculate multiplier based on custom size
+    const multiplier = portion.customSize / 100;
     
-    // Keep original per100g values for reference
-    originalCaloriesPer100g: originalProduct.caloriesPer100g || originalProduct.calories,
-    originalNutrients: originalProduct.nutrients,
+    // Adjust calories
+    if (product.caloriesPer100g) {
+      adjustedProduct.calories = Math.round(product.caloriesPer100g * multiplier);
+    }
     
-    // Add portion-adjusted nutrients
-    nutrients: adjustedNutrients,
+    // Adjust nutrients if they exist
+    if (product.nutrients) {
+      adjustedProduct.nutrients = {
+        fat: Math.round((product.nutrients.fat || 0) * multiplier * 10) / 10,
+        carbs: Math.round((product.nutrients.carbs || 0) * multiplier * 10) / 10,
+        protein: Math.round((product.nutrients.protein || 0) * multiplier * 10) / 10,
+        sugar: Math.round((product.nutrients.sugar || 0) * multiplier * 10) / 10,
+        fiber: Math.round((product.nutrients.fiber || 0) * multiplier * 10) / 10,
+      };
+    }
     
-    // Add portion information for tracking
-    portionInfo: {
-      type: portion.type,
-      servingCount: portion.servingCount,
+    // Update portion info
+    adjustedProduct.portionInfo = {
+      type: 'per100g',
       customSize: portion.customSize,
-      displayText: portion.displayText,
-      multiplier: portion.multiplier
-    },
+      displayText: `${portion.customSize}g`,
+      originalPer100g: true
+    };
     
-    // Update serving size to reflect actual consumed portion
-    servingSize: portion.displayText,
+  } else if (portion.type === 'perServing') {
+    // Calculate multiplier based on serving count
+    const servingMultiplier = portion.servingCount;
     
-    // Add a flag to indicate this is portion-adjusted
-    isPortionAdjusted: true,
+    // Adjust calories using per-serving values
+    if (product.caloriesPerServing) {
+      adjustedProduct.calories = Math.round(product.caloriesPerServing * servingMultiplier);
+    }
     
-    // Update product name to include portion info
-    productName: `${originalProduct.productName} (${portion.displayText})`,
-  };
-
+    // Adjust nutrients using per-serving values if they exist
+    if (product.nutrientsPerServing) {
+      adjustedProduct.nutrients = {
+        fat: Math.round((product.nutrientsPerServing.fat || 0) * servingMultiplier * 10) / 10,
+        carbs: Math.round((product.nutrientsPerServing.carbs || 0) * servingMultiplier * 10) / 10,
+        protein: Math.round((product.nutrientsPerServing.protein || 0) * servingMultiplier * 10) / 10,
+        sugar: Math.round((product.nutrientsPerServing.sugar || 0) * servingMultiplier * 10) / 10,
+        fiber: Math.round((product.nutrientsPerServing.fiber || 0) * servingMultiplier * 10) / 10,
+      };
+    } else if (product.nutrients) {
+      // Fallback: if no per-serving nutrients, use per100g nutrients
+      // This might not be accurate, but better than nothing
+      adjustedProduct.nutrients = {
+        fat: Math.round((product.nutrients.fat || 0) * servingMultiplier * 10) / 10,
+        carbs: Math.round((product.nutrients.carbs || 0) * servingMultiplier * 10) / 10,
+        protein: Math.round((product.nutrients.protein || 0) * servingMultiplier * 10) / 10,
+        sugar: Math.round((product.nutrients.sugar || 0) * servingMultiplier * 10) / 10,
+        fiber: Math.round((product.nutrients.fiber || 0) * servingMultiplier * 10) / 10,
+      };
+    }
+    
+    // Update portion info
+    adjustedProduct.portionInfo = {
+      type: 'perServing',
+      servingCount: portion.servingCount,
+      displayText: `${portion.servingCount} serving${portion.servingCount !== 1 ? 's' : ''}`,
+      originalPerServing: true
+    };
+  }
+  
+  // Add timestamp and portion metadata
+  adjustedProduct.savedAt = new Date().toISOString();
+  adjustedProduct.portionAdjusted = true;
+  adjustedProduct.originalPortionType = portion.type;
+  
   return adjustedProduct;
 };
 
@@ -737,7 +766,7 @@ const createPortionAdjustedProductDetailed = (originalProduct, portion) => {
                     <View style={styles.nutriScoreContainer}><Text style={styles.nutriScoreLabel}>Nutri-Score: </Text><View style={[styles.nutriScoreBadge, { backgroundColor: getNutriScoreColor(scannedProduct.nutriScore) }]}><Text style={styles.nutriScoreText}>{scannedProduct.nutriScore.toUpperCase()}</Text></View></View>
                   )}
                   <View style={styles.nutritionSection}>
-                    <Text style={styles.sectionTitle}>Nutrition Facts ({showPerServing ? 'per serving' : 'per 100g'} - {scannedProduct.servingSize})</Text>
+                    <Text style={styles.sectionTitle}>Nutrition Facts</Text>
                     <TouchableOpacity 
                       style={styles.portionDisplay}
                       onPress={() => setShowPortionEditor(true)}
@@ -871,11 +900,13 @@ const createPortionAdjustedProductDetailed = (originalProduct, portion) => {
     },
   ].map((item, index) => {
     // Calculate the adjusted value based on current portion
-    const adjustedValue = calculatePortionNutrition(
-      item.per100gValue, 
-      'per100g'  // Always use per100g as base since we have both values
-    );
-    
+    let adjustedValue;
+
+    if(currentPortion.type === 'per100g') {
+      adjustedValue = (item.per100gValue * currentPortion.customSize) / 100;
+    }else{
+      adjustedValue = item.perServingValue * currentPortion.servingCount;
+    }
     return (
       <View key={index} style={styles.nutritionItemCard}>
         <Ionicons 
