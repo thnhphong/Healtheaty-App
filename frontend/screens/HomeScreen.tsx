@@ -15,7 +15,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/HomeScreenStyles';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { runTransaction } from 'firebase/firestore';
 import { db } from '../../backend/config/firebase';
 import { getAuth } from 'firebase/auth';
 //circular calorie progrss from components/ui
@@ -88,6 +89,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mealLog, setMealLog] = useState<ScannedProduct[]>([]);
   const [isLoadingMeals, setIsLoadingMeals] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
 
   /* meal log */
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null);
@@ -95,6 +97,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     loadUserData();
+    return () => setIsMounted(false); // Cleanup on unmount
   }, []);
 
   useEffect(() => {
@@ -392,6 +395,91 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
+  /* remove meal log item 
+const handleRemoveMeal = async (itemId: string) => {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+    if (!isMounted) return;
+
+    const now = new Date();
+    console.log('Attempting to delete item with ID:', itemId);
+
+    await Promise.race([
+      (async () => {
+        await runTransaction(db, async (transaction) => {
+          // Read from scannedProducts first
+          const productRef = doc(db, 'scannedProducts', itemId);
+          const productSnap = await transaction.get(productRef);
+          if (!productSnap.exists()) {
+            console.log('Item not found in scannedProducts');
+            throw new Error('Item not found in scannedProducts');
+          }
+          const originalProduct = productSnap.data() as ScannedProduct;
+
+          // Read from foodDiary
+          const today = now.toISOString().split('T')[0];
+          const diaryRef = doc(db, 'foodDiary', `${user.uid}_${today}`);
+          const diarySnapshot = await transaction.get(diaryRef);
+
+          if (diarySnapshot.exists()) {
+            const diaryData = diarySnapshot.data();
+            const currentFoods = diaryData.foods || [];
+            console.log('Current foods in diary:', currentFoods);
+
+            const productToRemove = currentFoods.find((p: ScannedProduct) => p.id === itemId);
+            if (!productToRemove) {
+              console.log('Item not found in foodDiary with ID:', itemId);
+              // Fallback: Search by productName and scannedAt
+              const fallbackMatch = currentFoods.find(
+                (p: ScannedProduct) =>
+                  p.productName === originalProduct.productName &&
+                  p.scannedAt === originalProduct.scannedAt
+              );
+              if (fallbackMatch) {
+                const updatedFoods = currentFoods.filter((p: ScannedProduct) => p !== fallbackMatch);
+                if (updatedFoods.length === 0) {
+                  transaction.delete(diaryRef);
+                } else {
+                  transaction.update(diaryRef, { foods: updatedFoods, updatedAt: now.toISOString() });
+                }
+                console.log('Removed by fallback match');
+              } else {
+                console.log('No fallback match found in foodDiary');
+              }
+            } else {
+              const updatedFoods = currentFoods.filter((p: ScannedProduct) => p.id !== itemId);
+              if (updatedFoods.length === 0) {
+                transaction.delete(diaryRef);
+              } else {
+                transaction.update(diaryRef, { foods: updatedFoods, updatedAt: now.toISOString() });
+              }
+              console.log('Removed by ID match');
+            }
+          }
+
+          // Write deletion from scannedProducts (already read above)
+          transaction.delete(productRef);
+        });
+      })(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+    ]);
+
+    if (isMounted) {
+      await loadMealLog(selectedDate);
+      Alert.alert('Success', 'Food deleted successfully!');
+    }
+  } catch (error) {
+    console.error('Error deleting product:', error.message);
+    if (isMounted) Alert.alert('Error', `Failed to delete food: ${error.message}`);
+  }
+};
+*/
+
   const renderMealItem = ({ item }: { item: ScannedProduct }) => (
     <TouchableOpacity style={styles.mealItem}
       onPress={() => {
@@ -435,12 +523,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </Text>
           </View>
         </View>
+       <View style={styles.mealItemRight}>
         <View style={styles.mealItemCalories}>
           <Text style={styles.mealItemCalorieNumber}>{item.calories}</Text>
           <Text style={styles.mealItemCalorieLabel}>kcal</Text>
         </View>
-        
       </View>
+    </View>
     </TouchableOpacity>
   );
 

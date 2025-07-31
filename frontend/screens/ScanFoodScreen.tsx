@@ -19,7 +19,6 @@ import { collection, addDoc, doc, setDoc, arrayUnion } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth';
 import { styles } from '../styles/ScanFoodScreen';
 import AnimatedNutritionValue from '../components/ui/AnimatedNutritionValue';
-import { foodCalorieDatabase } from '../../backend/models/foodCalorieDatabase';
 import { vietnameseFoodNutrition } from '../../backend/data/foodCalorieDatabase';
 import { uploadImageToCloudinary } from '../utils/uploadImageToCloudinary';
 import { useNavigation } from '@react-navigation/native';

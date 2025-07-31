@@ -115,8 +115,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   calendarDayToday: {
-    backgroundColor: '#FF6B35',
-    borderRadius: 20,
+    backgroundColor: 'red',
+    borderRadius: 50,
   },
   calendarDayText: {
     fontSize: 14,
@@ -291,7 +291,7 @@ export const styles = StyleSheet.create({
   },
   calendarDaySelected: {
     backgroundColor: '#FF6B35',
-    borderRadius: 16,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -416,7 +416,6 @@ export const styles = StyleSheet.create({
   productName: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 5,
     color: '#333',
   },
   brandBadge: {
@@ -434,18 +433,18 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     fontSize: 16,
     color: '#666',
-    marginBottom: 5,
+    marginBottom: 6,
   },
   productServing: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: '#f1f5f9ff',
     fontSize: 14,
-    maxWidth: '15%',
+    maxWidth: '28%',
     textAlign: 'center',
-    borderRadius: 50,
+    borderRadius: 20,
     color: '#999',
-    marginBottom: 5,
+    marginBottom: 12,
     fontWeight: '500',
   },
   nutritionStats: {
@@ -493,6 +492,13 @@ export const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 16,
     color: '#333',
+  },
+  mealItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  mealItemRemoveButton: {
+    marginLeft: 10,
   },
   modalCloseButton: {
     backgroundColor: '#ff6b6b',
