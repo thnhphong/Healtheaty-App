@@ -1,7 +1,5 @@
 import React from 'react';
-import AppNavigator from './frontend/types/AppNavigation';
-
-// import './firebase'; 
+import AppNavigator from './frontend/src/navigation/AppNavigator';
 
 export default function App() {
   return <AppNavigator />;
