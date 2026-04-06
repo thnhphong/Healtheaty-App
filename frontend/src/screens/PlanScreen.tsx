@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/screens/PlanScreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { getAuth } from 'firebase/auth';
 import { arrayUnion, arrayRemove, serverTimestamp, setDoc, deleteDoc, doc, getDocs, getDoc, updateDoc, collection } from 'firebase/firestore';
-import { db } from '../../backend/config/firebase';
+import { db } from '../services/firebase';
 
 import { styles } from '../styles/PlanScreenStyles';
 
@@ -200,7 +200,7 @@ const PlanScreen: React.FC = () => {
                   <Text style={styles.goalDesc}>{goal.desc}</Text>
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color=Colors.slate500 />
+              <Ionicons name="chevron-forward" size={20} color={Colors.slate500} />
             </View>
           </TouchableOpacity>
         ))}
@@ -283,7 +283,7 @@ const PlanScreen: React.FC = () => {
         {/* greeting */}
         <View style={styles.profileHeader}>
           <View style={styles.profileAvatar}>
-            <Ionicons name="person" size={24} color=Colors.slate500 />
+            <Ionicons name="person" size={24} color={Colors.slate500} />
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileGreeting}>Hey, {firstName}</Text>
@@ -363,7 +363,7 @@ const PlanScreen: React.FC = () => {
   /* --------------------------- root render ---------------------------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor=Colors.grayGhost />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.grayGhost} />
       <LinearGradient
         colors={[Colors.backgroundEmerald,Colors.white,Colors.backgroundEmerald]} style={styles.gradientContainer}
       >

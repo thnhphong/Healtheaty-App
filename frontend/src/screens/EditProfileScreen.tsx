@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -17,7 +17,7 @@ import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/EditProfileStyles';
 
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../../backend/config/firebase';
+import { db, auth } from '../services/firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import * as ImagePicker from 'expo-image-picker';
@@ -353,7 +353,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color=Colors.text />
+          <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
       </View>
@@ -520,7 +520,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
                   </Text>
                 </View>
                 {userInfo.activityFactor === option.value && (
-                  <Ionicons name="checkmark" size={20} color=Colors.accentBlue />
+                  <Ionicons name="checkmark" size={20} color={Colors.accentBlue} />
                 )}
               </TouchableOpacity>
             ))}
@@ -540,7 +540,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
       style={styles.menuItem}
       onPress={() => setShowPasswordForm(!showPasswordForm)}
     >
-      <Ionicons name="key" size={24} color=Colors.primary />
+      <Ionicons name="key" size={24} color={Colors.primary} />
       <Text style={styles.menuText}>Change Password</Text>
     </TouchableOpacity>
 

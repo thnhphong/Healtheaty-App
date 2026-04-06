@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
@@ -15,16 +15,16 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '../../backend/config/firebase';
+import { db } from '../services/firebase';
 import { collection, addDoc, doc, setDoc, arrayUnion } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { styles } from '../styles/ScanFoodScreen';
 import AnimatedNutritionValue from '../components/ui/AnimatedNutritionValue';
-import { foodCalorieDatabase } from '../data/foodCalorieDatabase';
+import { foodCalorieDatabase } from '../constants/foodCalorieDatabase';
 import { uploadImageToCloudinary } from '../utils/uploadImageToCloudinary';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { vietnameseFoodNutrition } from '../../backend/data/foodCalorieDatabase';
+import { vietnameseFoodNutrition } from '../constants/foodCalorieDatabase';
 
 type RootStackParamList = {
   History: { refresh?: number };
@@ -950,7 +950,7 @@ export default function ScanFoodScreen() {
   if (!permission) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color=Colors.accentBlue />
+        <ActivityIndicator size="large" color={Colors.accentBlue} />
         <Text style={styles.loadingText}>Loading camera...</Text>
       </View>
     );
@@ -960,7 +960,7 @@ export default function ScanFoodScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Ionicons name="camera-outline" size={64} color=Colors.graySilver />
+        <Ionicons name="camera-outline" size={64} color={Colors.graySilver} />
         <Text style={styles.permissionText}>Camera permission is required</Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
@@ -1054,7 +1054,7 @@ export default function ScanFoodScreen() {
                   disabled={isLoading || !cameraReady}
                 >
                   {isLoading ? (
-                    <ActivityIndicator size="small" color=Colors.white />
+                    <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
                     <Ionicons name="camera" size={32} color="white" />
                   )}
@@ -1066,7 +1066,7 @@ export default function ScanFoodScreen() {
                   <Text style={styles.barcodeInstructionsText}>
                     {isScanning ? 'Scanning...' : 'Point camera at barcode'}
                   </Text>
-                  {isLoading && <ActivityIndicator size="small" color=Colors.white />}
+                  {isLoading && <ActivityIndicator size="small" color={Colors.white} />}
                 </View>
               )}
             </View>
@@ -1102,7 +1102,7 @@ export default function ScanFoodScreen() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color=Colors.white />
+                <ActivityIndicator size="small" color={Colors.white} />
               ) : (
                 <Text style={styles.analyzeButtonText}>Analyze Food</Text>
               )}
@@ -1121,7 +1121,7 @@ export default function ScanFoodScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowProductModal(false)}>
-              <Ionicons name="close" size={28} color=Colors.text />
+              <Ionicons name="close" size={28} color={Colors.text} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
               {scannedProduct?.isVietnameseFood ? 'Food Detected' : 
@@ -1140,7 +1140,7 @@ export default function ScanFoodScreen() {
                   />
                 ) : (
                   <View style={styles.placeholderImage}>
-                    <Ionicons name="image-outline" size={48} color=Colors.graySilver />
+                    <Ionicons name="image-outline" size={48} color={Colors.graySilver} />
                   </View>
                 )}
 
@@ -1185,7 +1185,7 @@ export default function ScanFoodScreen() {
                       // Enhanced nutrition for Vietnamese food
                       <View style={styles.nutritionGrid}>
                         <View style={styles.nutritionItemCard}>
-                          <Ionicons name="flame" size={24} color=Colors.primary style={styles.nutritionIcon} />
+                          <Ionicons name="flame" size={24} color={Colors.primary} style={styles.nutritionIcon} />
                           <Text style={styles.nutritionLabel}>Calories</Text>
                           <AnimatedNutritionValue value={scannedProduct.calories} suffix=" kcal" duration={2000} />
                         </View>
@@ -1193,7 +1193,7 @@ export default function ScanFoodScreen() {
                         {scannedProduct.nutrients && (
                           <>
                             <View style={styles.nutritionItemCard}>
-                              <Ionicons name="fitness" size={24} color=Colors.success style={styles.nutritionIcon} />
+                              <Ionicons name="fitness" size={24} color={Colors.success} style={styles.nutritionIcon} />
                               <Text style={styles.nutritionLabel}>Protein</Text>
                               <AnimatedNutritionValue 
                                 value={showPerServing ? scannedProduct.nutrientsPerServing?.protein ?? 0 : scannedProduct.nutrients.protein} 
@@ -1203,7 +1203,7 @@ export default function ScanFoodScreen() {
                             </View>
                             
                             <View style={styles.nutritionItemCard}>
-                              <Ionicons name="leaf" size={24} color=Colors.accentBlue style={styles.nutritionIcon} />
+                              <Ionicons name="leaf" size={24} color={Colors.accentBlue} style={styles.nutritionIcon} />
                               <Text style={styles.nutritionLabel}>Carbs</Text>
                               <AnimatedNutritionValue 
                                 value={showPerServing ? scannedProduct.nutrientsPerServing?.carbs ?? 0 : scannedProduct.nutrients.carbs} 
@@ -1213,7 +1213,7 @@ export default function ScanFoodScreen() {
                             </View>
                             
                             <View style={styles.nutritionItemCard}>
-                              <Ionicons name="pizza" size={24} color=Colors.warning style={styles.nutritionIcon} />
+                              <Ionicons name="pizza" size={24} color={Colors.warning} style={styles.nutritionIcon} />
                               <Text style={styles.nutritionLabel}>Fat</Text>
                               <AnimatedNutritionValue 
                                 value={showPerServing ? scannedProduct.nutrientsPerServing?.fat ?? 0 : scannedProduct.nutrients.fat} 

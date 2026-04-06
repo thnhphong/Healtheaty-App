@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/screens/SignUpScreen.tsx
 import React, { useState } from 'react';
 import {
@@ -197,7 +197,7 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="Enter your age"
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={userInfo.age}
             onChangeText={(value) => handleInputChange('age', value)}
             keyboardType="numeric"
@@ -219,7 +219,7 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="Enter your height"
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={userInfo.height}
             onChangeText={(value) => handleInputChange('height', value)}
             keyboardType="numeric"
@@ -229,7 +229,7 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="Enter your weight"
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={userInfo.weight}
             onChangeText={(value) => handleInputChange('weight', value)}
             keyboardType="numeric"

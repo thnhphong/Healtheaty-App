@@ -70,7 +70,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ navigation }) => {
           shadowRadius: 4,
         }}
       >
-        <ScanLine color=Colors.white size={28} />
+        <ScanLine color={Colors.white} size={28} />
       </TouchableOpacity>
 
     </View>

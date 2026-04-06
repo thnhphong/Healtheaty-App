@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +21,7 @@ const Logo: React.FC = () => {
   return (
      <View style={welcomeStyles.header}>
             <View style={welcomeStyles.logoContainer}>
-              <Ionicons name="restaurant" size={40} color=Colors.white />
+              <Ionicons name="restaurant" size={40} color={Colors.white} />
               <Text style={welcomeStyles.logoText}>Healtheaty</Text>
             </View>
           </View>

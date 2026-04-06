@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 import React from 'react';
 import { View, ScrollView, TouchableOpacity, Linking, Image, Text, SafeAreaView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +11,7 @@ const HelpScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Ionicons name="help-circle-outline" size={90} color=Colors.primary style={styles.icon} />
+        <Ionicons name="help-circle-outline" size={90} color={Colors.primary} style={styles.icon} />
 
         <Text style={styles.title}>Help & Support</Text>
 
@@ -27,7 +27,7 @@ const HelpScreen: React.FC = () => {
         </Text>
 
         <TouchableOpacity style={styles.button} onPress={handleEmailPress}>
-          <Ionicons name="mail" size={20} color=Colors.white />
+          <Ionicons name="mail" size={20} color={Colors.white} />
           <Text style={styles.buttonText}>Contact Us via Email</Text>
         </TouchableOpacity>
 

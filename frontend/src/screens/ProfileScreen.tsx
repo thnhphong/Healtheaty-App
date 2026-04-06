@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/screens/ProfileScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,8 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/ProfileScreenStyles';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../backend/config/firebase';
-import { auth } from '../../backend/config/firebase';
+import { db } from '../services/firebase';
+import { auth } from '../services/firebase';
 
 import BottomNavigation from '../components/ui/BottomNavigation';
 
@@ -166,11 +166,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color=Colors.text />
+          <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Profile</Text>
         <TouchableOpacity>
-          <Ionicons name="settings" size={24} color=Colors.text />
+          <Ionicons name="settings" size={24} color={Colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -184,7 +184,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <Image source={{ uri: userInfo.avatarUrl }} style={styles.avartar} />
             ) : (
               <View>
-                <Ionicons name="person-circle" size={120} color=Colors.primary />
+                <Ionicons name="person-circle" size={120} color={Colors.primary} />
               </View>
             )}
           </View>
@@ -249,33 +249,33 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         {/* Menu Options */}
         <View style={styles.menuSection}>
           <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="heart" size={24} color=Colors.primary />
+            <Ionicons name="heart" size={24} color={Colors.primary} />
             <Text style={styles.menuText}>Favorites</Text>
-            <Ionicons name="chevron-forward" size={20} color=Colors.textSecondary />
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="notifications" size={24} color=Colors.primary />
+            <Ionicons name="notifications" size={24} color={Colors.primary} />
             <Text style={styles.menuText}>Notifications</Text>
-            <Ionicons name="chevron-forward" size={20} color=Colors.textSecondary />
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Help')}>
-            <Ionicons name="help-circle" size={24} color=Colors.primary />
+            <Ionicons name="help-circle" size={24} color={Colors.primary} />
             <Text style={styles.menuText}>Help</Text>
-            <Ionicons name="chevron-forward" size={20} color=Colors.textSecondary />
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('About')}>
-            <Ionicons name="information-circle" size={24} color=Colors.primary />
+            <Ionicons name="information-circle" size={24} color={Colors.primary} />
             <Text style={styles.menuText}>About</Text>
-            <Ionicons name="chevron-forward" size={20} color=Colors.textSecondary />
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
-            <Ionicons name="log-out" size={24} color=Colors.bmi.obese />
+            <Ionicons name="log-out" size={24} color={Colors.bmi.obese} />
             <Text style={[styles.menuText, { color: Colors.bmi.obese }]}>Log out</Text>
-            <Ionicons name="chevron-forward" size={20} color=Colors.textSecondary />
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </ScrollView>

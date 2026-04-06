@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/screens/WelcomeScreen.tsx
 import React from 'react';
 import {
@@ -44,7 +44,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={welcomeStyles.container}>
-      <StatusBar barStyle="light-content" backgroundColor=Colors.primary />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
       
       {/* Logo */}
       <View style={welcomeStyles.header}>
@@ -54,7 +54,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
       {/* Main Content */}
       <View style={welcomeStyles.content}>
         <View style={welcomeStyles.iconContainer}>
-          <Ionicons name="restaurant-outline" size={80} color=Colors.white />
+          <Ionicons name="restaurant-outline" size={80} color={Colors.white} />
         </View>
         
         <Text style={welcomeStyles.title}>

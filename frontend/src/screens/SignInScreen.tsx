@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/SignInScreenStyles';
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithCredential } from 'firebase/auth';
-import { auth, db } from '../../backend/config/firebase';
+import { auth, db } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -167,7 +167,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <SafeAreaView style={styles.container}>
-          <StatusBar barStyle="dark-content" backgroundColor=Colors.white />
+          <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
           
           <ScrollView
             contentContainerStyle={styles.scrollContainer}
@@ -176,7 +176,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
           >
             <View style={styles.header}>
               <View style={styles.logoContainer}>
-                <Ionicons name="restaurant" size={24} color=Colors.primary />
+                <Ionicons name="restaurant" size={24} color={Colors.primary} />
                 <Text style={styles.logoText}>Healtheaty</Text>
               </View>
             </View>
@@ -190,7 +190,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
                   ref={emailInputRef}
                   style={styles.input}
                   placeholder="Your email"
-                  placeholderTextColor=Colors.textLight
+                  placeholderTextColor={Colors.textLight}
                   value={formData.email}
                   onChangeText={(value) => handleInputChange('email', value)}
                   keyboardType="email-address"
@@ -204,7 +204,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
                   ref={passwordInputRef}
                   style={styles.input}
                   placeholder="Password"
-                  placeholderTextColor=Colors.textLight
+                  placeholderTextColor={Colors.textLight}
                   value={formData.password}
                   onChangeText={(value) => handleInputChange('password', value)}
                   secureTextEntry
@@ -238,7 +238,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
                     onPress={handleGoogleSignIn}
                     disabled={loading}
                   >
-                    <Ionicons name="logo-google" size={24} color=Colors.white />
+                    <Ionicons name="logo-google" size={24} color={Colors.white} />
                     <Text style={styles.signInGoogleButtonText}>Sign In With Google</Text>
                   </TouchableOpacity>
                 </View>

@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/screens/HistoryScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -17,7 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { collection, query, where, getDocs, orderBy, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../../backend/config/firebase';
+import { db } from '../services/firebase';
 import { getAuth } from 'firebase/auth';
 import { LineChart } from 'react-native-chart-kit';
 import BottomNavigation from '../components/ui/BottomNavigation';
@@ -278,7 +278,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigation }) => {
           <Image source={{ uri: item.imageUrl }} style={styles.mealItemImage} />
         ) : (
           <View style={styles.mealItemImagePlaceholder}>
-            <Ionicons name="image" size={24} color=Colors.graySilver />
+            <Ionicons name="image" size={24} color={Colors.graySilver} />
           </View>
         )}
         
@@ -307,14 +307,14 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigation }) => {
               style={styles.actionButton}
               onPress={() => reAddMealItem(item)}
             >
-              <Ionicons name="add-circle" size={20} color=Colors.success />
+              <Ionicons name="add-circle" size={20} color={Colors.success} />
             </TouchableOpacity>
             
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => deleteMealItem(item.id)}
             >
-              <Ionicons name="trash" size={20} color=Colors.error />
+              <Ionicons name="trash" size={20} color={Colors.error} />
             </TouchableOpacity>
           </View>
         </View>
@@ -445,7 +445,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigation }) => {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color=Colors.textSecondary />
+        <Ionicons name="search" size={20} color={Colors.textSecondary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search meals..."
@@ -461,7 +461,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigation }) => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color=Colors.primary />
+            <ActivityIndicator size="large" color={Colors.primary} />
             <Text style={styles.loadingText}>Loading meal history...</Text>
           </View>
         ) : viewType === 'analytics' ? (
@@ -478,7 +478,7 @@ const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigation }) => {
               />
             ) : (
               <View style={styles.emptyState}>
-                <Ionicons name="restaurant-outline" size={64} color=Colors.graySilver />
+                <Ionicons name="restaurant-outline" size={64} color={Colors.graySilver} />
                 <Text style={styles.emptyStateText}>No meals found</Text>
                 <Text style={styles.emptyStateSubtext}>
                   {searchQuery ? 'Try adjusting your search' : 'Start scanning products to build your history'}

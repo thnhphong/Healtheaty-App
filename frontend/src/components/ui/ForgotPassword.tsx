@@ -10,7 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../../../backend/config/firebase';
+import { auth } from '../../services/firebase';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -41,7 +41,7 @@ const ForgotPassword = () => {
 
       {/* Logo & Title */}
        <View style={styles.logoContainer}>
-                      <Ionicons name="restaurant" size={24} color=Colors.primary />
+                      <Ionicons name="restaurant" size={24} color={Colors.primary} />
                       <Text style={styles.logoText}>Healtheaty</Text>
                     </View>
 

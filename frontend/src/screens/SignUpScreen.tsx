@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/screens/SignUpScreen.tsx
 import React, { useState } from 'react';
 import {
@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../styles/SignUpScreenStyles';
 import { NavigationProp } from '@react-navigation/native';
 import { collection, getDocs, query, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../../backend/config/firebase';
+import { auth, db } from '../services/firebase';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 
 type RootStackParamList = {
@@ -146,11 +146,11 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor=Colors.white />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
 
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Ionicons name="restaurant" size={24} color=Colors.primary />
+          <Ionicons name="restaurant" size={24} color={Colors.primary} />
           <Text style={styles.logoText}>Healtheaty</Text>
         </View>
       </View>
@@ -163,7 +163,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           <TextInput 
             style={styles.input} 
             placeholder="Name" 
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={formData.fullName} 
             onChangeText={v => handleInputChange('fullName', v)} 
             editable={!loading} 
@@ -171,7 +171,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           <TextInput 
             style={styles.input} 
             placeholder="Email" 
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={formData.email} 
             onChangeText={v => handleInputChange('email', v)} 
             keyboardType="email-address" 
@@ -181,7 +181,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           <TextInput 
             style={styles.input} 
             placeholder="Mobile No" 
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={formData.phone} 
             onChangeText={v => handleInputChange('phone', v)} 
             keyboardType="phone-pad" 
@@ -190,7 +190,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           <TextInput 
             style={styles.input} 
             placeholder="Password" 
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={formData.password} 
             onChangeText={v => handleInputChange('password', v)} 
             secureTextEntry 
@@ -199,7 +199,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           <TextInput 
             style={styles.input} 
             placeholder="Confirm password" 
-            placeholderTextColor=Colors.textLight
+            placeholderTextColor={Colors.textLight}
             value={formData.confirmPassword} 
             onChangeText={v => handleInputChange('confirmPassword', v)} 
             secureTextEntry 

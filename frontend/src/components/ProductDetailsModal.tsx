@@ -53,7 +53,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={28} color=Colors.text />
+            <Ionicons name="close" size={28} color={Colors.text} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>
             {product.isVietnameseFood ? 'Food Detected' : 
@@ -67,7 +67,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
             <Image source={{ uri: product.imageUrl }} style={styles.productImage} />
           ) : (
             <View style={styles.placeholderImage}>
-              <Ionicons name="image-outline" size={48} color=Colors.graySilver />
+              <Ionicons name="image-outline" size={48} color={Colors.graySilver} />
             </View>
           )}
 
@@ -98,7 +98,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 
               <View style={styles.nutritionGrid}>
                 <View style={styles.nutritionItemCard}>
-                  <Ionicons name="flame" size={24} color=Colors.primary style={styles.nutritionIcon} />
+                  <Ionicons name="flame" size={24} color={Colors.primary} style={styles.nutritionIcon} />
                   <Text style={styles.nutritionLabel}>Calories</Text>
                   <AnimatedNutritionValue value={product.calories} suffix=" kcal" duration={2000} />
                 </View>
@@ -106,7 +106,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 {product.nutrients && (
                   <>
                     <View style={styles.nutritionItemCard}>
-                      <Ionicons name="fitness" size={24} color=Colors.success style={styles.nutritionIcon} />
+                      <Ionicons name="fitness" size={24} color={Colors.success} style={styles.nutritionIcon} />
                       <Text style={styles.nutritionLabel}>Protein</Text>
                       <AnimatedNutritionValue 
                         value={showPerServing ? product.nutrientsPerServing?.protein ?? 0 : product.nutrients.protein} 
@@ -116,7 +116,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     </View>
                     
                     <View style={styles.nutritionItemCard}>
-                      <Ionicons name="leaf" size={24} color=Colors.accentBlue style={styles.nutritionIcon} />
+                      <Ionicons name="leaf" size={24} color={Colors.accentBlue} style={styles.nutritionIcon} />
                       <Text style={styles.nutritionLabel}>Carbs</Text>
                       <AnimatedNutritionValue 
                         value={showPerServing ? product.nutrientsPerServing?.carbs ?? 0 : product.nutrients.carbs} 
@@ -126,7 +126,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     </View>
                     
                     <View style={styles.nutritionItemCard}>
-                      <Ionicons name="pizza" size={24} color=Colors.warning style={styles.nutritionIcon} />
+                      <Ionicons name="pizza" size={24} color={Colors.warning} style={styles.nutritionIcon} />
                       <Text style={styles.nutritionLabel}>Fat</Text>
                       <AnimatedNutritionValue 
                         value={showPerServing ? product.nutrientsPerServing?.fat ?? 0 : product.nutrients.fat} 

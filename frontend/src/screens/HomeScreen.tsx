@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/screens/HomeScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/HomeScreenStyles';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../backend/config/firebase';
+import { db } from '../services/firebase';
 import { getAuth } from 'firebase/auth';
 //circular calorie progrss from components/ui
 import CircularCalorieProgress from '../components/ui/CircularCalorieProgress';
@@ -395,7 +395,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Image source={{ uri: item.imageUrl }} style={styles.mealItemImage} />
         ) : (
           <View style={styles.mealItemImagePlaceholder}>
-            <Ionicons name="image" size={24} color=Colors.graySilver />
+            <Ionicons name="image" size={24} color={Colors.graySilver} />
           </View>
         )}
         <View style={styles.mealItemInfo}>
@@ -407,13 +407,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View style={styles.mealItemMeta}>
             {item.isFromPhoto && (
               <View style={styles.mealItemTag}>
-                <Ionicons name="camera" size={12} color=Colors.success />
+                <Ionicons name="camera" size={12} color={Colors.success} />
                 <Text style={[styles.mealItemTagText, { color: Colors.success }]}>Photo</Text>
               </View>
             )}
             {item.barcode && (
               <View style={styles.mealItemTag}>
-                <Ionicons name="barcode" size={12} color=Colors.accentBlue />
+                <Ionicons name="barcode" size={12} color={Colors.accentBlue} />
                 <Text style={[styles.mealItemTagText, { color: Colors.accentBlue }]}>Barcode</Text>
               </View>
             )}
@@ -449,7 +449,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             {userInfo?.avatarUrl ? (
               <Image source={{uri: userInfo.avatarUrl}} style={styles.avatar}/>
             ) : (
-               <Ionicons name="person-circle" size={50} color=Colors.primary />
+               <Ionicons name="person-circle" size={50} color={Colors.primary} />
             )}
             </View>
         </TouchableOpacity>
@@ -460,7 +460,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.calorieCard}>
           <View style={styles.calorieTextContainer}>
           <View style={styles.calorieHeader}>
-            <Ionicons name="restaurant" size={24} color=Colors.primary />
+            <Ionicons name="restaurant" size={24} color={Colors.primary} />
             <Text style={styles.calorieTitle}>Daily Intake</Text>
           </View>
           
@@ -477,11 +477,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.calendarContainer}>
           <View style={styles.calendarHeader}>
             <TouchableOpacity onPress={gotoPreviousMonth}>
-              <Ionicons name="chevron-back" size={24} color=Colors.textSecondary />
+              <Ionicons name="chevron-back" size={24} color={Colors.textSecondary} />
             </TouchableOpacity>
             <Text style={styles.calendarTitle}>{getCurrentDate()}</Text>
             <TouchableOpacity onPress={gotoNextMonth}>
-              <Ionicons name="chevron-forward" size={24} color=Colors.textSecondary />
+              <Ionicons name="chevron-forward" size={24} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -517,10 +517,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         {/* Meal Log Section */}
         <View style={styles.mealLogContainer}>
           <View style={styles.mealLogHeader}>
-            <Ionicons name="time" size={24} color=Colors.primary />
+            <Ionicons name="time" size={24} color={Colors.primary} />
             <Text style={styles.mealLogTitle}>Meal Log</Text>
             {isLoadingMeals && (
-              <ActivityIndicator size="small" color=Colors.primary style={{ marginLeft: 10 }} />
+              <ActivityIndicator size="small" color={Colors.primary} style={{ marginLeft: 10 }} />
             )}
           </View>
           <Text style={styles.mealLogDate}>{getSelectedDateString()}</Text>
@@ -535,7 +535,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             />
           ) : (
             <View style={styles.emptyMealLog}>
-              <Ionicons name="restaurant-outline" size={48} color=Colors.graySilver />
+              <Ionicons name="restaurant-outline" size={48} color={Colors.graySilver} />
               <Text style={styles.emptyMealLogText}>
                 {isLoadingMeals ? 'Loading meals...' : 'No meals logged for this day'}
               </Text>
