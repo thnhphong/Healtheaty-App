@@ -20,7 +20,6 @@ import { collection, addDoc, doc, setDoc, arrayUnion } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth';
 import { styles } from '../styles/ScanFoodScreen';
 import AnimatedNutritionValue from '../components/ui/AnimatedNutritionValue';
-import { foodCalorieDatabase } from '../constants/foodCalorieDatabase';
 import { uploadImageToCloudinary } from '../utils/uploadImageToCloudinary';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -166,7 +165,7 @@ export default function ScanFoodScreen() {
       
       // Convert image to base64
       const base64 = await FileSystem.readAsStringAsync(imageUri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64',
       });
 
       console.log(`📸 Image converted to base64, size: ${base64.length} characters`);

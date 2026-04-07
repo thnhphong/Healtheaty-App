@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 import { StyleSheet } from 'react-native';
 import { width } from '../screens/PlanScreen';
 

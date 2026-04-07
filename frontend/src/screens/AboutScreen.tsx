@@ -7,7 +7,7 @@ const AboutScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Image
-          source={require('../images/icons/tdee.png')}
+          source={require('../assets/images/icons/tdee.png')}
           style={styles.image}
           resizeMode="contain"
         />

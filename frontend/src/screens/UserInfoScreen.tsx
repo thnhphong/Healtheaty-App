@@ -14,7 +14,7 @@ import { Picker } from '@react-native-picker/picker';
 import { NavigationProp } from '@react-navigation/native';
 import { styles } from '../styles/UserInfoScreenStyles';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../../backend/config/firebase';
+import { auth, db } from '../services/firebase';
 
 // Define your root stack param list
 type RootStackParamList = {
@@ -128,7 +128,7 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
       4: 1.725, // Very active
       5: 1.9    // Extra active
     };
-    
+
     return bmr * activityMultipliers[activityFactor as keyof typeof activityMultipliers];
   };
 
@@ -138,7 +138,7 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
     }
 
     setLoading(true);
-    
+
     try {
       const user = auth.currentUser;
       if (!user) {
@@ -165,9 +165,9 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
 
       // Save to Firestore
       await setDoc(doc(db, 'userInfo', user.uid), userInfoData);
-      
+
       console.log('User Info Data saved:', userInfoData);
-      
+
       Alert.alert(
         'Success!',
         `Your information has been saved successfully.\nBMR: ${Math.round(bmr)} calories/day\nTDEE: ${Math.round(tdee)} calories/day`,
@@ -252,7 +252,7 @@ const UserInfoScreen: React.FC<UserInfoScreenProps> = ({ navigation }) => {
             </Picker>
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.submitButton, loading && styles.disabledButton]}
             onPress={handleSubmit}
             disabled={loading}

@@ -1,4 +1,4 @@
-import Colors from '../../constants/Colors';
+import Colors from '../constants/Colors';
 // frontend/styles/HistoryScreenStyles.ts
 import { StyleSheet } from 'react-native';
 
